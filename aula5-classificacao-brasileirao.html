@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="aula5-classificacao-brasileirao_files/libs/clipboard/clipboard.min.js"></script>
+<script src="aula5-classificacao-brasileirao_files/libs/quarto-html/tabby.min.js"></script>
+<script src="aula5-classificacao-brasileirao_files/libs/quarto-html/popper.min.js"></script>
+<script src="aula5-classificacao-brasileirao_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="aula5-classificacao-brasileirao_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="aula5-classificacao-brasileirao_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="aula5-classificacao-brasileirao_files/libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.18">
+
+  <meta name="author" content="Aula 5">
+  <title>Classificação e Métricas de Avaliação</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="aula5-classificacao-brasileirao_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="aula5-classificacao-brasileirao_files/libs/revealjs/dist/reveal.css">
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      { color: #003b4f; background-color: #f1f3f5; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #003b4f; } /* Normal */
+    code span.al { color: #ad0000; } /* Alert */
+    code span.an { color: #5e5e5e; } /* Annotation */
+    code span.at { color: #657422; } /* Attribute */
+    code span.bn { color: #ad0000; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #003b4f; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #20794d; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #5e5e5e; } /* Comment */
+    code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
+    code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
+    code span.dt { color: #ad0000; } /* DataType */
+    code span.dv { color: #ad0000; } /* DecVal */
+    code span.er { color: #ad0000; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #ad0000; } /* Float */
+    code span.fu { color: #4758ab; } /* Function */
+    code span.im { color: #00769e; } /* Import */
+    code span.in { color: #5e5e5e; } /* Information */
+    code span.kw { color: #003b4f; font-weight: bold; } /* Keyword */
+    code span.op { color: #5e5e5e; } /* Operator */
+    code span.ot { color: #003b4f; } /* Other */
+    code span.pp { color: #ad0000; } /* Preprocessor */
+    code span.sc { color: #5e5e5e; } /* SpecialChar */
+    code span.ss { color: #20794d; } /* SpecialString */
+    code span.st { color: #20794d; } /* String */
+    code span.va { color: #111111; } /* Variable */
+    code span.vs { color: #20794d; } /* VerbatimString */
+    code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="aula5-classificacao-brasileirao_files/libs/revealjs/dist/theme/quarto-0427d8d92a431aa6a6430e53ec02a470.css">
+  <link href="aula5-classificacao-brasileirao_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="aula5-classificacao-brasileirao_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="aula5-classificacao-brasileirao_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="aula5-classificacao-brasileirao_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">Classificação e Métricas de Avaliação</h1>
+  <p class="subtitle">Machine Learning e Deep Learning — Estudo de caso: Brasileirão 2026</p>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+Aula 5
+</div>
+</div>
+</div>
+
+</section>
+<section>
+<section id="abertura-e-dados" class="title-slide slide level1 center">
+<h1>Abertura e dados</h1>
+
+</section>
+<section id="a-pergunta-mudou" class="slide level2">
+<h2>A pergunta mudou</h2>
+<p>Até aqui: <strong>regressão linear</strong> → prever valores contínuos (preço de imóvel, valor de venda).</p>
+<p>Hoje a pergunta de negócio é binária:</p>
+<blockquote>
+<p><strong>“O time mandante vai vencer a partida?” (Sim / Não)</strong></p>
+</blockquote>
+<p>Isso é um problema de <strong>classificação</strong>. O produto do modelo deixa de ser um número qualquer e passa a ser uma <strong>probabilidade entre 0 e 1</strong>.</p>
+</section>
+<section id="o-dataset" class="slide level2">
+<h2>O dataset</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="" aria-label="1"></a><span class="fu">library</span>(tidyverse)    <span class="co"># ← manipulação de dados e gráficos</span></span>
+<span id="cb1-2"><a href="" aria-label="2"></a><span class="fu">library</span>(tidymodels)   <span class="co"># ← modelagem: rsample, parsnip, yardstick, tune...</span></span>
+<span id="cb1-3"><a href="" aria-label="3"></a></span>
+<span id="cb1-4"><a href="" aria-label="4"></a>brasileirao_2026 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"C:/Users/T14/Downloads/brasileirao_2026.csv"</span>)</span>
+<span id="cb1-5"><a href="" aria-label="5"></a></span>
+<span id="cb1-6"><a href="" aria-label="6"></a><span class="fu">glimpse</span>(brasileirao_2026)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 380
+Columns: 5
+$ season &lt;dbl&gt; 2026, 2026, 2026, 2026, 2026, 2026, 2026, 2026, 2026, 2026, 202…
+$ date   &lt;date&gt; 2026-01-28, 2026-01-28, 2026-01-28, 2026-01-28, 2026-01-28, 20…
+$ home   &lt;chr&gt; "Atlético MG", "Internacional", "Coritiba", "Vitória", "Flumine…
+$ score  &lt;chr&gt; "2x2", "0x1", "0x1", "2x0", "2x1", "1x2", "4x2", "2x1", "2x1", …
+$ away   &lt;chr&gt; "Palmeiras", "Athletico PR", "Bragantino", "Remo", "Grêmio", "B…</code></pre>
+</div>
+</div>
+<ul>
+<li>Jogos que ainda não aconteceram têm <code>score == "x"</code> → ficam de fora do treino</li>
+<li>380 jogos no total; cada time joga 19 vezes em casa e 19 fora</li>
+</ul>
+</section>
+<section id="preparação-dos-dados" class="slide level2">
+<h2>Preparação dos dados</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="" aria-label="1"></a>jogos <span class="ot">&lt;-</span> brasileirao_2026 <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="" aria-label="2"></a>  <span class="fu">filter</span>(score <span class="sc">!=</span> <span class="st">"x"</span>) <span class="sc">|&gt;</span>                                    <span class="co"># ← só jogos já realizados</span></span>
+<span id="cb3-3"><a href="" aria-label="3"></a>  <span class="fu">separate</span>(score, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"gols_home"</span>, <span class="st">"gols_away"</span>),        <span class="co"># ← "2x1" vira duas colunas</span></span>
+<span id="cb3-4"><a href="" aria-label="4"></a>           <span class="at">sep =</span> <span class="st">"x"</span>, <span class="at">convert =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-5"><a href="" aria-label="5"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb3-6"><a href="" aria-label="6"></a>    <span class="at">home_win =</span> <span class="fu">factor</span>(</span>
+<span id="cb3-7"><a href="" aria-label="7"></a>      <span class="fu">if_else</span>(gols_home <span class="sc">&gt;</span> gols_away, <span class="st">"sim"</span>, <span class="st">"nao"</span>),          <span class="co"># ← nossa variável-alvo</span></span>
+<span id="cb3-8"><a href="" aria-label="8"></a>      <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"sim"</span>, <span class="st">"nao"</span>)   <span class="co"># ← 1º nível = evento de interesse</span></span>
+<span id="cb3-9"><a href="" aria-label="9"></a>    )</span>
+<span id="cb3-10"><a href="" aria-label="10"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb3-11"><a href="" aria-label="11"></a>  <span class="fu">arrange</span>(date)                                              <span class="co"># ← ordem cronológica importa!</span></span>
+<span id="cb3-12"><a href="" aria-label="12"></a></span>
+<span id="cb3-13"><a href="" aria-label="13"></a>jogos <span class="sc">|&gt;</span> <span class="fu">count</span>(home_win) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">proporcao =</span> n <span class="sc">/</span> <span class="fu">sum</span>(n))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  home_win     n proporcao
+  &lt;fct&gt;    &lt;int&gt;     &lt;dbl&gt;
+1 sim        119     0.465
+2 nao        137     0.535</code></pre>
+</div>
+</div>
+<p>O mandante venceu ~46% dos jogos. <strong>Guarde esse número</strong> — ele volta no Bloco 3.</p>
+</section></section>
+<section>
+<section id="bloco-1-da-regressão-à-classificação" class="title-slide slide level1 center">
+<h1>Bloco 1 — Da Regressão à Classificação</h1>
+
+</section>
+<section id="por-que-não-usar-a-reta-da-regressão-linear" class="slide level2">
+<h2>Por que não usar a reta da regressão linear?</h2>
+<p>Se usássemos uma reta para prever vitória do mandante, o modelo poderia responder <span class="math inline">\(+2.5\)</span> ou <span class="math inline">\(-0.4\)</span>…</p>
+<p>…mas probabilidade só existe entre <span class="math inline">\(0\)</span> (0%) e <span class="math inline">\(1\)</span> (100%).</p>
+<p>Precisamos de uma função que <strong>“esprema”</strong> qualquer número real para o intervalo <span class="math inline">\([0, 1]\)</span>.</p>
+</section>
+<section id="a-função-sigmoide-símbolo-por-símbolo" class="slide level2">
+<h2>A Função Sigmoide — símbolo por símbolo</h2>
+<p><span class="math display">\[\sigma(z) = \frac{1}{1 + e^{-z}}\]</span></p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Símbolo</th>
+<th>O que é</th>
+<th>Intuição</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(z\)</span></td>
+<td>O <strong>“placar interno”</strong> do modelo (pode ser qualquer número de <span class="math inline">\(-\infty\)</span> a <span class="math inline">\(+\infty\)</span>)</td>
+<td>Quanto maior <span class="math inline">\(z\)</span>, mais o modelo “acredita” na vitória do mandante</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(e\)</span></td>
+<td>Constante de Euler (<span class="math inline">\(\approx 2.718\)</span>)</td>
+<td>Motor do crescimento/decaimento exponencial</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(e^{-z}\)</span></td>
+<td>Decai quando <span class="math inline">\(z\)</span> cresce</td>
+<td>É o mecanismo do “espremedor”</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\sigma(z)\)</span></td>
+<td>A saída: probabilidade entre 0 e 1</td>
+<td>Nossa previsão final</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="a-função-sigmoide-nos-extremos" class="slide level2">
+<h2>A Função Sigmoide — nos extremos</h2>
+<p><span class="math display">\[\sigma(z) = \frac{1}{1 + e^{-z}}\]</span></p>
+<ul>
+<li><span class="math inline">\(z \to +\infty \Rightarrow e^{-z} \to 0 \Rightarrow \sigma \to \frac{1}{1+0} = 1\)</span> (<strong>100%</strong>)</li>
+<li><span class="math inline">\(z \to -\infty \Rightarrow e^{-z} \to +\infty \Rightarrow \sigma \to \frac{1}{1+\infty} = 0\)</span> (<strong>0%</strong>)</li>
+<li><span class="math inline">\(z = 0 \Rightarrow \sigma = \frac{1}{1+1} = 0.5\)</span> (<strong>moeda ao ar</strong>: total indecisão)</li>
+</ul>
+<p>A sigmoide nunca toca 0 ou 1 — o modelo nunca tem certeza absoluta.</p>
+</section>
+<section id="a-sigmoide-desenhada" class="slide level2">
+<h2>A sigmoide desenhada</h2>
+
+<img data-src="aula5-classificacao-brasileirao_files/figure-revealjs/sigmoide-1.png" width="960" class="r-stretch"></section>
+<section id="a-sigmoide-em-ação-features-pesos-probabilidade" class="slide level2">
+<h2>A sigmoide em ação: features × pesos → probabilidade</h2>
+<p>Como um jogo vira um ponto na curva:</p>
+<ul>
+<li>Os <span class="math inline">\(x\)</span> são as <strong>features</strong> do jogo: o time é mandante? qual a <strong>forma recente</strong> (quantos jogos venceu ultimamente)? qual o saldo de força?</li>
+<li>Os <span class="math inline">\(\beta\)</span> são os <strong>pesos</strong>: o quanto cada feature importa. Nem tudo importa igual! Um time de grande história, como o Vasco, mas em fase ruim, recebe peso <strong>menor</strong> na forma recente do que Flamengo e Palmeiras, que vivem grande momento.</li>
+<li>Cada <span class="math inline">\(\beta_j \cdot x_j\)</span> <strong>empurra o placar</strong> <span class="math inline">\(z\)</span> um pouco; a soma total entra na sigmoide e vira o ponto vermelho: a probabilidade final.</li>
+</ul>
+</section>
+<section id="a-sigmoide-em-ação-o-gráfico" class="slide level2">
+<h2>A sigmoide em ação: o gráfico</h2>
+
+<img data-src="aula5-classificacao-brasileirao_files/figure-revealjs/sigmoide-features-1.png" width="960" class="r-stretch"></section>
+<section id="de-onde-vem-o-z-a-combinação-linear" class="slide level2">
+<h2>De onde vem o <span class="math inline">\(z\)</span>? A combinação linear</h2>
+<p><span class="math display">\[z = \beta_0 + \beta_1 \cdot x_1 + \beta_2 \cdot x_2 + \dots
+\]</span><span class="math display">\[z = \beta_0 + \beta_1 \cdot x_1 + \beta_2 \cdot x_2 + \dots\]</span></p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Símbolo</th>
+<th>O que é</th>
+<th>No futebol</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(x_1, x_2, \dots\)</span></td>
+<td>As <strong>variáveis</strong> (features) que descrevem o jogo</td>
+<td>Saldo de força, saldo de gols, momento…</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\beta_1, \beta_2, \dots\)</span></td>
+<td>Os <strong>pesos</strong> que o algoritmo aprende</td>
+<td>Quanto cada variável empurra o placar a favor (ou contra)</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\beta_0\)</span></td>
+<td>O <strong>intercepto</strong>: o valor de <span class="math inline">\(z\)</span> quando tudo é zero</td>
+<td>Times iguais jogando → o que sobra é a <strong>vantagem de jogar em casa</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regressão Logística = combinação linear + sigmoide:</strong> <span class="math inline">\(P(\text{vitória}) = \sigma(\beta_0 + \beta_1 x_1 + \dots)\)</span></p>
+</section>
+<section id="a-variável-do-modelo-saldo-de-forças" class="slide level2">
+<h2>A variável do modelo: saldo de forças</h2>
+<p>Força de cada time = <strong>aproveitamento de pontos</strong> (pontos conquistados ÷ pontos disputados):</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="" aria-label="1"></a>stats_home <span class="ot">&lt;-</span> jogos <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="" aria-label="2"></a>  <span class="fu">group_by</span>(<span class="at">time =</span> home) <span class="sc">|&gt;</span>                                <span class="co"># ← desempenho jogando em casa</span></span>
+<span id="cb5-3"><a href="" aria-label="3"></a>  <span class="fu">summarise</span>(<span class="at">jogos =</span> <span class="fu">n</span>(),</span>
+<span id="cb5-4"><a href="" aria-label="4"></a>            <span class="at">pontos =</span> <span class="fu">sum</span>(<span class="dv">3</span> <span class="sc">*</span> (gols_home <span class="sc">&gt;</span> gols_away) <span class="sc">+</span> (gols_home <span class="sc">==</span> gols_away)))</span>
+<span id="cb5-5"><a href="" aria-label="5"></a></span>
+<span id="cb5-6"><a href="" aria-label="6"></a>stats_away <span class="ot">&lt;-</span> jogos <span class="sc">|&gt;</span></span>
+<span id="cb5-7"><a href="" aria-label="7"></a>  <span class="fu">group_by</span>(<span class="at">time =</span> away) <span class="sc">|&gt;</span>                                <span class="co"># ← desempenho jogando fora</span></span>
+<span id="cb5-8"><a href="" aria-label="8"></a>  <span class="fu">summarise</span>(<span class="at">jogos =</span> <span class="fu">n</span>(),</span>
+<span id="cb5-9"><a href="" aria-label="9"></a>            <span class="at">pontos =</span> <span class="fu">sum</span>(<span class="dv">3</span> <span class="sc">*</span> (gols_away <span class="sc">&gt;</span> gols_home) <span class="sc">+</span> (gols_away <span class="sc">==</span> gols_home)))</span>
+<span id="cb5-10"><a href="" aria-label="10"></a></span>
+<span id="cb5-11"><a href="" aria-label="11"></a>ratings <span class="ot">&lt;-</span> <span class="fu">full_join</span>(stats_home, stats_away, <span class="at">by =</span> <span class="st">"time"</span>) <span class="sc">|&gt;</span>   <span class="co"># ← junta casa + fora</span></span>
+<span id="cb5-12"><a href="" aria-label="12"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="sc">-</span>time, <span class="sc">~</span> <span class="fu">replace_na</span>(.x, <span class="dv">0</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb5-13"><a href="" aria-label="13"></a>  <span class="fu">transmute</span>(time, <span class="at">aproveitamento =</span> (pontos.x <span class="sc">+</span> pontos.y) <span class="sc">/</span> (<span class="dv">3</span> <span class="sc">*</span> (jogos.x <span class="sc">+</span> jogos.y)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="saldo-de-forças-probabilidade" class="slide level2">
+<h2>Saldo de forças → probabilidade</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="" aria-label="1"></a>saldo <span class="ot">&lt;-</span> <span class="fl">0.77</span> <span class="sc">-</span> <span class="fl">0.17</span>    <span class="co"># ← time forte (77%) recebe time fraco (17%)</span></span>
+<span id="cb6-2"><a href="" aria-label="2"></a>saldo</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.6</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="" aria-label="1"></a><span class="fu">sigmoide</span>(<span class="dv">4</span> <span class="sc">*</span> saldo)     <span class="co"># ← a sigmoide converte o saldo em probabilidade</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.9168273</code></pre>
+</div>
+</div>
+<div class="fragment">
+<p>Ideia central da aula: o modelo <strong>calcula o saldo de forças</strong> entre mandante e visitante e a sigmoide o <strong>converte direto em probabilidade de vitória</strong>.</p>
+</div>
+</section>
+<section id="divisão-treinoteste-qual-é-a-certa-aqui" class="slide level2">
+<h2>Divisão treino/teste: qual é a certa aqui?</h2>
+<p>❌ <strong>Split aleatório</strong> (embaralhar os jogos): errado! O modelo treinaria com jogos de novembro para prever jogos de março — <strong>vazamento temporal</strong>.</p>
+<p>✅ <strong>Split temporal</strong>: treinamos com o passado, testamos no “futuro” — exatamente como o modelo seria usado na vida real (prever a próxima rodada).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="" aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">7321</span>)</span>
+<span id="cb10-2"><a href="" aria-label="2"></a>split  <span class="ot">&lt;-</span> <span class="fu">initial_time_split</span>(jogos, <span class="at">prop =</span> <span class="fl">0.75</span>)   <span class="co"># ← 75% mais antigos = treino</span></span>
+<span id="cb10-3"><a href="" aria-label="3"></a>treino <span class="ot">&lt;-</span> <span class="fu">training</span>(split)                          <span class="co"># ← jan–jul</span></span>
+<span id="cb10-4"><a href="" aria-label="4"></a>teste  <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)                           <span class="co"># ← ago–set (o "futuro")</span></span>
+<span id="cb10-5"><a href="" aria-label="5"></a></span>
+<span id="cb10-6"><a href="" aria-label="6"></a><span class="fu">c</span>(<span class="at">treino =</span> <span class="fu">nrow</span>(treino), <span class="at">teste =</span> <span class="fu">nrow</span>(teste))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>treino  teste 
+   192     64 </code></pre>
+</div>
+</div>
+</section>
+<section id="e-os-jogos-adiados-remarcados" class="slide level2 scrollable">
+<h2>E os jogos adiados (remarcados)?</h2>
+<p>No Brasileirão real, jogos são adiados (copas, datas FIFA, logística). No nosso dataset eles aparecem de duas formas:</p>
+<ol type="1">
+<li><strong>Jogos remarcados já realizados</strong>: entram pela <strong>data em que de fato foram jogados</strong>, não pela rodada original. Como nosso split usa o calendário real (<code>arrange(date)</code> + <code>initial_time_split</code>), eles caem <strong>automaticamente do lado certo</strong> da divisão — sem ajuste manual. ✅</li>
+<li><strong>Jogos sem data definida</strong> (3 jogos com <code>date</code> vazia e <code>score == "x"</code>): ainda não aconteceram, então ficam <strong>fora de treino e teste</strong> — aparecem só na previsão do futuro, no fim da aula.</li>
+</ol>
+<div class="callout callout-tip callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Tip</strong></p>
+</div>
+<div class="callout-content">
+<p>Se o split fosse por <strong>número da rodada</strong> em vez da data, um jogo adiado da rodada 3 jogado em agosto entraria no treino “como se” tivesse acontecido em janeiro — vazamento sutil. Dividir pela data real evita isso.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="construindo-as-features-sem-olhar-o-futuro" class="slide level2">
+<h2>Construindo as features (sem olhar o futuro!)</h2>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Data leakage</strong></p>
+</div>
+<div class="callout-content">
+<p>Os ratings são calculados <strong>somente com o treino</strong>. Se usássemos o campeonato inteiro, o modelo “veria” resultados do futuro — e as métricas ficariam artificialmente otimistas.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="" aria-label="1"></a><span class="co"># ratings recalculados SÓ com o treino (mesmo código de antes, sobre `treino`)</span></span>
+<span id="cb12-2"><a href="" aria-label="2"></a>stats_home <span class="ot">&lt;-</span> treino <span class="sc">|&gt;</span> <span class="fu">group_by</span>(<span class="at">time =</span> home) <span class="sc">|&gt;</span></span>
+<span id="cb12-3"><a href="" aria-label="3"></a>  <span class="fu">summarise</span>(<span class="at">jogos =</span> <span class="fu">n</span>(), <span class="at">pontos =</span> <span class="fu">sum</span>(<span class="dv">3</span> <span class="sc">*</span> (gols_home <span class="sc">&gt;</span> gols_away) <span class="sc">+</span> (gols_home <span class="sc">==</span> gols_away)))</span>
+<span id="cb12-4"><a href="" aria-label="4"></a>stats_away <span class="ot">&lt;-</span> treino <span class="sc">|&gt;</span> <span class="fu">group_by</span>(<span class="at">time =</span> away) <span class="sc">|&gt;</span></span>
+<span id="cb12-5"><a href="" aria-label="5"></a>  <span class="fu">summarise</span>(<span class="at">jogos =</span> <span class="fu">n</span>(), <span class="at">pontos =</span> <span class="fu">sum</span>(<span class="dv">3</span> <span class="sc">*</span> (gols_away <span class="sc">&gt;</span> gols_home) <span class="sc">+</span> (gols_away <span class="sc">==</span> gols_home)))</span>
+<span id="cb12-6"><a href="" aria-label="6"></a></span>
+<span id="cb12-7"><a href="" aria-label="7"></a>ratings <span class="ot">&lt;-</span> <span class="fu">full_join</span>(stats_home, stats_away, <span class="at">by =</span> <span class="st">"time"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-8"><a href="" aria-label="8"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="sc">-</span>time, <span class="sc">~</span> <span class="fu">replace_na</span>(.x, <span class="dv">0</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb12-9"><a href="" aria-label="9"></a>  <span class="fu">transmute</span>(time, <span class="at">aproveitamento =</span> (pontos.x <span class="sc">+</span> pontos.y) <span class="sc">/</span> (<span class="dv">3</span> <span class="sc">*</span> (jogos.x <span class="sc">+</span> jogos.y)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="a-função-que-monta-o-saldo-de-forças" class="slide level2">
+<h2>A função que monta o saldo de forças</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="" aria-label="1"></a>add_features <span class="ot">&lt;-</span> <span class="cf">function</span>(df, ratings) {</span>
+<span id="cb13-2"><a href="" aria-label="2"></a>  df <span class="sc">|&gt;</span></span>
+<span id="cb13-3"><a href="" aria-label="3"></a>    <span class="fu">left_join</span>(ratings, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"home"</span> <span class="ot">=</span> <span class="st">"time"</span>)) <span class="sc">|&gt;</span>      <span class="co"># ← aproveitamento do mandante</span></span>
+<span id="cb13-4"><a href="" aria-label="4"></a>    <span class="fu">rename</span>(<span class="at">ap_home =</span> aproveitamento) <span class="sc">|&gt;</span></span>
+<span id="cb13-5"><a href="" aria-label="5"></a>    <span class="fu">left_join</span>(ratings, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"away"</span> <span class="ot">=</span> <span class="st">"time"</span>)) <span class="sc">|&gt;</span>      <span class="co"># ← aproveitamento do visitante</span></span>
+<span id="cb13-6"><a href="" aria-label="6"></a>    <span class="fu">rename</span>(<span class="at">ap_away =</span> aproveitamento) <span class="sc">|&gt;</span></span>
+<span id="cb13-7"><a href="" aria-label="7"></a>    <span class="fu">mutate</span>(<span class="at">saldo_forca =</span> ap_home <span class="sc">-</span> ap_away)             <span class="co"># ← a feature do modelo</span></span>
+<span id="cb13-8"><a href="" aria-label="8"></a>}</span>
+<span id="cb13-9"><a href="" aria-label="9"></a></span>
+<span id="cb13-10"><a href="" aria-label="10"></a>treino_f <span class="ot">&lt;-</span> <span class="fu">add_features</span>(treino, ratings)   <span class="co"># ← aplica no treino</span></span>
+<span id="cb13-11"><a href="" aria-label="11"></a>teste_f  <span class="ot">&lt;-</span> <span class="fu">add_features</span>(teste, ratings)    <span class="co"># ← aplica no teste (ratings do treino!)</span></span>
+<span id="cb13-12"><a href="" aria-label="12"></a></span>
+<span id="cb13-13"><a href="" aria-label="13"></a>treino_f <span class="sc">|&gt;</span> <span class="fu">select</span>(home, away, saldo_forca, home_win) <span class="sc">|&gt;</span> <span class="fu">head</span>(<span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 4
+  home          away         saldo_forca home_win
+  &lt;chr&gt;         &lt;chr&gt;              &lt;dbl&gt; &lt;fct&gt;   
+1 Atlético MG   Palmeiras        -0.333  nao     
+2 Internacional Athletico PR     -0.25   nao     
+3 Coritiba      Bragantino       -0.0702 nao     
+4 Vitória       Remo              0.140  sim     
+5 Fluminense    Grêmio            0.193  sim     </code></pre>
+</div>
+</div>
+</section></section>
+<section>
+<section id="bloco-2-log-loss-como-o-modelo-aprende" class="title-slide slide level1 center">
+<h1>Bloco 2 — Log-Loss: como o modelo aprende</h1>
+
+</section>
+<section id="por-que-não-usar-o-mse" class="slide level2">
+<h2>Por que não usar o MSE?</h2>
+<p>Na regressão linear, minimizávamos o <strong>erro quadrático médio (MSE)</strong>.</p>
+<p>Em classificação probabilística, usamos a <strong>Log-Loss</strong> (entropia cruzada / <em>deviance</em>):</p>
+<p><span class="math display">\[\text{LogLoss} = -\frac{1}{n} \sum_{i=1}^{n} \Big[ \; y_i \log(p_i) + (1 - y_i)\log(1 - p_i) \; \Big]\]</span></p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Símbolo</th>
+<th>O que é</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(n\)</span></td>
+<td>Número de jogos</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(y_i\)</span></td>
+<td>O que <strong>aconteceu</strong> no jogo <span class="math inline">\(i\)</span>: 1 = mandante venceu, 0 = não</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(p_i\)</span></td>
+<td>O que o modelo <strong>previu</strong>: probabilidade de vitória do mandante</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\log\)</span></td>
+<td>Logaritmo natural — transforma multiplicações de probabilidades em somas</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="a-mágica-da-fórmula-só-um-termo-sobrevive" class="slide level2">
+<h2>A mágica da fórmula: só um termo “sobrevive”</h2>
+<p><span class="math display">\[\text{LogLoss} = -\frac{1}{n} \sum_{i=1}^{n} \Big[ \; y_i \log(p_i) + (1 - y_i)\log(1 - p_i) \; \Big]\]</span></p>
+<p>Para cada jogo, <strong>apenas um dos dois termos conta</strong>:</p>
+<ul>
+<li>Se o mandante <strong>venceu</strong> (<span class="math inline">\(y_i = 1\)</span>): o custo é <span class="math inline">\(-\log(p_i)\)</span> → o modelo é punido se deu pouca chance à vitória</li>
+<li>Se o mandante <strong>não venceu</strong> (<span class="math inline">\(y_i = 0\)</span>): o custo é <span class="math inline">\(-\log(1 - p_i)\)</span> → o modelo é punido se deu chance demais à vitória</li>
+</ul>
+<p>E quanto <strong>mais confiante e errado</strong> o palpite, maior a punição ↓</p>
+</section>
+<section id="a-punição-pela-arrogância" class="slide level2">
+<h2>A punição pela arrogância</h2>
+
+<img data-src="aula5-classificacao-brasileirao_files/figure-revealjs/logloss-curva-1.png" width="960" class="r-stretch"></section>
+<section id="o-efeito-no-aprendizado" class="slide level2">
+<h2>O efeito no aprendizado</h2>
+<p>Flamengo em casa, modelo crava <strong>99%</strong> de chance, e o time <strong>perde</strong>:</p>
+<p><span class="math display">\[-\log(1 - 0.99) = -\log(0.01) \approx 4.6\]</span></p>
+<p>Se tivesse cravado <strong>99,9%</strong>: <span class="math inline">\(-\log(0.001) \approx 6.9\)</span></p>
+<div class="fragment">
+<p>A Log-Loss <strong>obriga o modelo a calibrar probabilidades realistas</strong> — quem dá palpite exagerado paga caro. É por isso que a Regressão Logística é conhecida por gerar probabilidades bem calibradas.</p>
+</div>
+</section>
+<section id="ajustando-a-regressão-logística" class="slide level2">
+<h2>Ajustando a Regressão Logística</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="" aria-label="1"></a>lr_spec <span class="ot">&lt;-</span> <span class="fu">logistic_reg</span>() <span class="sc">|&gt;</span> <span class="fu">set_engine</span>(<span class="st">"glm"</span>)     <span class="co"># ← Regressão Logística via glm</span></span>
+<span id="cb15-2"><a href="" aria-label="2"></a></span>
+<span id="cb15-3"><a href="" aria-label="3"></a>lr_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span></span>
+<span id="cb15-4"><a href="" aria-label="4"></a>  <span class="fu">add_formula</span>(home_win <span class="sc">~</span> saldo_forca) <span class="sc">|&gt;</span>           <span class="co"># ← vitória explicada pelo saldo de força</span></span>
+<span id="cb15-5"><a href="" aria-label="5"></a>  <span class="fu">add_model</span>(lr_spec)</span>
+<span id="cb15-6"><a href="" aria-label="6"></a></span>
+<span id="cb15-7"><a href="" aria-label="7"></a>lr_fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(lr_wf, <span class="at">data =</span> treino_f)              <span class="co"># ← o aprendizado acontece aqui</span></span>
+<span id="cb15-8"><a href="" aria-label="8"></a></span>
+<span id="cb15-9"><a href="" aria-label="9"></a><span class="fu">tidy</span>(lr_fit) <span class="sc">|&gt;</span>                                    <span class="co"># ← os betas aprendidos</span></span>
+<span id="cb15-10"><a href="" aria-label="10"></a>  <span class="fu">mutate</span>(<span class="at">leitura =</span> <span class="fu">case_when</span>(</span>
+<span id="cb15-11"><a href="" aria-label="11"></a>    term <span class="sc">==</span> <span class="st">"(Intercept)"</span> <span class="sc">~</span> <span class="st">"← z quando o saldo é 0 (times iguais): é o mando de campo"</span>,</span>
+<span id="cb15-12"><a href="" aria-label="12"></a>    term <span class="sc">==</span> <span class="st">"saldo_forca"</span> <span class="sc">~</span> <span class="st">"← peso do saldo: quanto z se move por ponto de saldo"</span></span>
+<span id="cb15-13"><a href="" aria-label="13"></a>  )) <span class="sc">|&gt;</span></span>
+<span id="cb15-14"><a href="" aria-label="14"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb15-15"><a href="" aria-label="15"></a>               <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Termo"</span>, <span class="st">"β estimado"</span>, <span class="st">"Erro-padrão"</span>,</span>
+<span id="cb15-16"><a href="" aria-label="16"></a>                             <span class="st">"Estatística z"</span>, <span class="st">"p-valor"</span>, <span class="st">"Leitura"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 9%">
+<col style="width: 10%">
+<col style="width: 12%">
+<col style="width: 6%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Termo</th>
+<th style="text-align: right;">β estimado</th>
+<th style="text-align: right;">Erro-padrão</th>
+<th style="text-align: right;">Estatística z</th>
+<th style="text-align: right;">p-valor</th>
+<th style="text-align: left;">Leitura</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">(Intercept)</td>
+<td style="text-align: right;">0.055</td>
+<td style="text-align: right;">0.155</td>
+<td style="text-align: right;">0.355</td>
+<td style="text-align: right;">0.723</td>
+<td style="text-align: left;">← z quando o saldo é 0 (times iguais): é o mando de campo</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">saldo_forca</td>
+<td style="text-align: right;">-4.369</td>
+<td style="text-align: right;">0.938</td>
+<td style="text-align: right;">-4.659</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: left;">← peso do saldo: quanto z se move por ponto de saldo</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Como ler cada coluna:</p>
+<ul>
+<li><strong>β estimado</strong> → o peso aprendido nos dados de <strong>treino</strong> (a “receita” do modelo)</li>
+<li><strong>Erro-padrão</strong> → a margem de incerteza do β</li>
+<li><strong>Estatística z</strong> (−4.66 aqui) → β ÷ erro-padrão, uma razão <strong>sinal/ruído</strong>: <span class="math inline">\(|z| &gt; 2\)</span> já indica que a variável carrega sinal real, longe do acaso</li>
+<li><strong>p-valor</strong> → probabilidade de ver um sinal desse tamanho se o β fosse <strong>zero</strong> de verdade (aqui ≈ 0,000003 → o saldo de força importa mesmo)</li>
+</ul>
+<div class="callout callout-note callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Note</strong></p>
+</div>
+<div class="callout-content">
+<p>O β aparece <strong>negativo</strong> porque o <code>glm</code>, internamente, modela a probabilidade do <strong>segundo</strong> nível do fator (“nao”). O <code>parsnip</code> desfaz a inversão nas previsões — para nós, o evento é sempre o 1º nível (“sim”).</p>
+</div>
+</div>
+</div>
+</section>
+<section id="os-coeficientes-na-prática-1-a-receita-do-modelo" class="slide level2">
+<h2>Os coeficientes na prática (1): a receita do modelo</h2>
+<p>Desfazendo a inversão do <code>glm</code>, a receita aprendida no treino é:</p>
+<p><span class="math display">\[P(\text{vitória}) = \sigma\Big(\;\underbrace{0.05}_{\beta_0:\ \text{ponto de partida}} + \underbrace{4.37}_{\beta_1:\ \text{peso do saldo}} \times \text{saldo\_forca}\;\Big)\]</span></p>
+<p>Lendo em português claro:</p>
+<ul>
+<li><strong>β₀ = 0.05</strong> → se os times têm <strong>força igual</strong> (saldo = 0), o placar interno é quase zero e <span class="math inline">\(\sigma(0) \approx 50\%\)</span>: o mando de campo, sozinho, vale pouco mais que uma moeda ao ar</li>
+<li><strong>β₁ = 4.37</strong> → cada <strong>ponto de saldo de força</strong> empurra o placar <span class="math inline">\(z\)</span> 4.37 unidades para cima (mais chance de vitória)</li>
+</ul>
+</section>
+<section id="os-coeficientes-na-prática-2-calculando-na-mão" class="slide level2">
+<h2>Os coeficientes na prática (2): calculando na mão</h2>
+<p>Exemplo real do nosso campeonato — <strong>Flamengo (ap = 0.685) recebe a Chapecoense (ap = 0.167)</strong>:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Passo</th>
+<th>Conta</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1️⃣ Saldo de força</td>
+<td><span class="math inline">\(0.685 - 0.167\)</span></td>
+<td><span class="math inline">\(0.518\)</span></td>
+</tr>
+<tr class="even">
+<td>2️⃣ Placar interno</td>
+<td><span class="math inline">\(z = 0.05 + 4.37 \times 0.518\)</span></td>
+<td><span class="math inline">\(z \approx 2.3\)</span></td>
+</tr>
+<tr class="odd">
+<td>3️⃣ Sigmoide</td>
+<td><span class="math inline">\(\sigma(2.3) = \frac{1}{1 + e^{-2.3}}\)</span></td>
+<td><span class="math inline">\(\approx 0.91\)</span> → <strong>91% de chance</strong></td>
+</tr>
+</tbody>
+</table>
+<p>E se fossem <strong>dois times iguais</strong>? saldo = 0 → <span class="math inline">\(z = 0.05\)</span> → <span class="math inline">\(\sigma \approx 51\%\)</span>: só o mando de campo.</p>
+<p>É exatamente assim que o modelo transforma “quem está melhor no campeonato” em probabilidade.</p>
+</section>
+<section id="previsões-e-log-loss-no-teste" class="slide level2">
+<h2>Previsões e Log-Loss no teste</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="" aria-label="1"></a>teste_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(lr_fit, <span class="at">new_data =</span> teste_f, <span class="at">type =</span> <span class="st">"prob"</span>) <span class="sc">|&gt;</span>   <span class="co"># ← probabilidades</span></span>
+<span id="cb16-2"><a href="" aria-label="2"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(lr_fit, <span class="at">new_data =</span> teste_f, <span class="at">type =</span> <span class="st">"class"</span>)) <span class="sc">|&gt;</span>   <span class="co"># ← decisão (corte 0.5)</span></span>
+<span id="cb16-3"><a href="" aria-label="3"></a>  <span class="fu">bind_cols</span>(teste_f)</span>
+<span id="cb16-4"><a href="" aria-label="4"></a></span>
+<span id="cb16-5"><a href="" aria-label="5"></a>teste_pred <span class="sc">|&gt;</span></span>
+<span id="cb16-6"><a href="" aria-label="6"></a>  <span class="fu">select</span>(date, home, away, home_win, .pred_sim, .pred_class) <span class="sc">|&gt;</span></span>
+<span id="cb16-7"><a href="" aria-label="7"></a>  <span class="fu">head</span>(<span class="dv">8</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 6
+  date       home       away        home_win .pred_sim .pred_class
+  &lt;date&gt;     &lt;chr&gt;      &lt;chr&gt;       &lt;fct&gt;        &lt;dbl&gt; &lt;fct&gt;      
+1 2026-07-26 Cruzeiro   Botafogo    nao          0.505 sim        
+2 2026-07-26 Bahia      Corinthians nao          0.544 sim        
+3 2026-07-26 Bragantino Coritiba    nao          0.563 sim        
+4 2026-07-26 Grêmio     Fluminense  nao          0.289 nao        
+5 2026-07-26 Flamengo   São Paulo   nao          0.735 sim        
+6 2026-07-26 Remo       Vitória     sim          0.339 nao        
+7 2026-07-26 Palmeiras  Atlético MG nao          0.802 sim        
+8 2026-07-29 Mirassol   Remo        sim          0.525 sim        </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="" aria-label="1"></a><span class="fu">mn_log_loss</span>(teste_pred, <span class="at">truth =</span> home_win, .pred_sim)   <span class="co"># ← Log-Loss média no teste</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  .metric     .estimator .estimate
+  &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;
+1 mn_log_loss binary         0.667</code></pre>
+</div>
+</div>
+<p>A <em>deviance</em> que o <code>glm</code> reporta é simplesmente a Log-Loss <span class="math inline">\(\times 2\)</span>.</p>
+</section>
+<section id="a-sigmoide-separando-os-jogos-do-teste" class="slide level2">
+<h2>A sigmoide separando os jogos do teste</h2>
+<p>Cada ponto é um <strong>jogo real do teste</strong>, posicionado no placar interno <span class="math inline">\(z\)</span> que o modelo calculou para ele. No próximo slide, o gráfico completo.</p>
+<p>Leitura: pontos <strong>vermelhos à direita</strong> e <strong>azuis à esquerda</strong> = o modelo separou bem. Um ponto vermelho na <strong>extrema esquerda</strong> é onde a Log-Loss cobra caro: o modelo deu chance baixíssima à vitória… e ela aconteceu.</p>
+</section>
+<section id="a-separação-na-tela" class="slide level2">
+<h2>A separação, na tela</h2>
+
+<img data-src="aula5-classificacao-brasileirao_files/figure-revealjs/sigmoide-separacao-1.png" width="960" class="r-stretch"></section></section>
+<section>
+<section id="bloco-3-matriz-de-confusão-e-a-armadilha-da-acurácia" class="title-slide slide level1 center">
+<h1>Bloco 3 — Matriz de Confusão e a Armadilha da Acurácia</h1>
+
+</section>
+<section id="a-armadilha-da-acurácia" class="slide level2">
+<h2>A armadilha da acurácia</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="" aria-label="1"></a><span class="co"># "Modelo cego": chuta SEMPRE que o mandante NÃO vence</span></span>
+<span id="cb20-2"><a href="" aria-label="2"></a>teste_pred <span class="sc">|&gt;</span></span>
+<span id="cb20-3"><a href="" aria-label="3"></a>  <span class="fu">mutate</span>(<span class="at">sempre_nao =</span> <span class="fu">factor</span>(<span class="st">"nao"</span>, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"sim"</span>, <span class="st">"nao"</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb20-4"><a href="" aria-label="4"></a>  <span class="fu">accuracy</span>(<span class="at">truth =</span> home_win, <span class="at">estimate =</span> sempre_nao)     <span class="co"># ← acurácia do chute fixo</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  .metric  .estimator .estimate
+  &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;
+1 accuracy binary         0.594</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="" aria-label="1"></a><span class="fu">accuracy</span>(teste_pred, <span class="at">truth =</span> home_win, <span class="at">estimate =</span> .pred_class)  <span class="co"># ← acurácia do nosso modelo</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  .metric  .estimator .estimate
+  &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;
+1 accuracy binary         0.562</code></pre>
+</div>
+</div>
+<p>Um chute fixo em “não vence” acerta <strong>mais da metade</strong> dos jogos sem entender nada de futebol. Em classes assimétricas, <strong>a acurácia isolada engana</strong>.</p>
+</section>
+<section id="os-quatro-cenários" class="slide level2">
+<h2>Os quatro cenários</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 27%">
+<col style="width: 36%">
+<col style="width: 36%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Real: venceu ✅</strong></th>
+<th><strong>Real: não venceu ❌</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Previu: vence</strong></td>
+<td>✅ <strong>TP</strong> — acertou o palpite</td>
+<td>⚠️ <strong>FP</strong> — alarme falso</td>
+</tr>
+<tr class="even">
+<td><strong>Previu: não vence</strong></td>
+<td>⚠️ <strong>FN</strong> — deixou passar</td>
+<td>✅ <strong>TN</strong> — acertou o palpite</td>
+</tr>
+</tbody>
+</table>
+<p>Como ler a matriz:</p>
+<ul>
+<li><strong>Precisão</strong> → olha a <strong>linha</strong> de cima → → → (“dos meus palpites de vitória, quantos certos?”)</li>
+<li><strong>Recall</strong> → olha a <strong>coluna</strong> da esquerda ↓ ↓ ↓ (“das vitórias reais, quantas capturei?”)</li>
+</ul>
+</section>
+<section id="a-matriz-com-os-nossos-dados" class="slide level2">
+<h2>A matriz com os nossos dados</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="" aria-label="1"></a>cm <span class="ot">&lt;-</span> <span class="fu">conf_mat</span>(teste_pred, <span class="at">truth =</span> home_win, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb24-2"><a href="" aria-label="2"></a>cm</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          Truth
+Prediction sim nao
+       sim  14  16
+       nao  12  22</code></pre>
+</div>
+</div>
+</section>
+<section id="a-matriz-em-imagem" class="slide level2">
+<h2>A matriz em imagem</h2>
+
+<img data-src="aula5-classificacao-brasileirao_files/figure-revealjs/matriz-plot-1.png" width="960" class="r-stretch"></section></section>
+<section>
+<section id="bloco-4-métricas-do-analista" class="title-slide slide level1 center">
+<h1>Bloco 4 — Métricas do Analista</h1>
+
+</section>
+<section id="as-fórmulas-símbolo-por-símbolo" class="slide level2">
+<h2>As fórmulas, símbolo por símbolo</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Métrica</th>
+<th>Fórmula</th>
+<th>Pergunta de negócio</th>
+<th>Onde olhar na matriz</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Precisão</strong></td>
+<td><span class="math inline">\(\frac{TP}{TP + FP}\)</span></td>
+<td>Dos palpites de vitória, quantos se confirmaram?</td>
+<td>Linha →</td>
+</tr>
+<tr class="even">
+<td><strong>Recall</strong></td>
+<td><span class="math inline">\(\frac{TP}{TP + FN}\)</span></td>
+<td>Das vitórias reais, quantas capturamos?</td>
+<td>Coluna ↓</td>
+</tr>
+<tr class="odd">
+<td><strong>F1-Score</strong></td>
+<td><span class="math inline">\(2 \cdot \frac{P \cdot R}{P + R}\)</span></td>
+<td>Equilíbrio entre as duas (média harmônica)</td>
+<td>Diagonal</td>
+</tr>
+<tr class="even">
+<td><strong>Kappa</strong></td>
+<td><span class="math inline">\(\frac{p_o - p_e}{1 - p_e}\)</span></td>
+<td>Quanto melhor que um chute ponderado pelo acaso?</td>
+<td>Toda ela</td>
+</tr>
+</tbody>
+</table>
+<p>Onde <span class="math inline">\(p_o\)</span> = concordância observada (acurácia) e <span class="math inline">\(p_e\)</span> = concordância esperada <strong>pelo acaso</strong>, dadas as proporções das classes.</p>
+</section>
+<section id="quando-cada-uma-importa" class="slide level2">
+<h2>Quando cada uma importa</h2>
+<ul>
+<li><strong>Precisão</strong> → apostador/investidor: cada <strong>falso positivo</strong> é dinheiro perdido num palpite errado. Alarme falso custa caro.</li>
+<li><strong>Recall</strong> → fraude/saúde: cada <strong>falso negativo</strong> é um caso real que passou despercebido. Deixar passar é inaceitável.</li>
+<li><strong>F1</strong> → quando as duas frentes importam; penaliza modelos que sacrificam uma pela outra.</li>
+<li><strong>Kappa</strong> → responde: “meu modelo é melhor que um chute que respeita as proporções do campeonato?” <span class="math inline">\(\kappa \approx 0\)</span> = não.</li>
+</ul>
+</section>
+<section id="exemplo-visual-10-palpites" class="slide level2">
+<h2>Exemplo visual: 10 palpites</h2>
+<p>Antes dos dados reais, vamos ver as métricas <strong>nascendo</strong> num campeonato de brinquedo com 10 jogos:</p>
+
+<img data-src="aula5-classificacao-brasileirao_files/figure-revealjs/exemplo-metricas-1.png" width="960" class="r-stretch"><p>E as outras duas saem da mesma contagem: <strong>Acurácia</strong> = (4 TP + 2 TN)/10 = 60% · <strong>F1</strong> = média harmônica de 80% e 57% ≈ 67%.</p>
+</section>
+<section id="calculando-tudo-de-uma-vez" class="slide level2">
+<h2>Calculando tudo de uma vez</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="" aria-label="1"></a>class_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(accuracy, precision, recall, f_meas, kap)  <span class="co"># ← pacote de métricas</span></span>
+<span id="cb26-2"><a href="" aria-label="2"></a></span>
+<span id="cb26-3"><a href="" aria-label="3"></a><span class="fu">class_metrics</span>(teste_pred, <span class="at">truth =</span> home_win, <span class="at">estimate =</span> .pred_class)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 3
+  .metric   .estimator .estimate
+  &lt;chr&gt;     &lt;chr&gt;          &lt;dbl&gt;
+1 accuracy  binary         0.562
+2 precision binary         0.467
+3 recall    binary         0.538
+4 f_meas    binary         0.5  
+5 kap       binary         0.115</code></pre>
+</div>
+</div>
+<div class="fragment">
+<p>Repare: a acurácia ficou <strong>abaixo do chute fixo</strong> e o <strong>Kappa perto de zero</strong> entrega o jogo — nosso baseline de uma variável só é fraco. As métricas certas não deixam a acurácia mentir sozinha.</p>
+</div>
+</section></section>
+<section>
+<section id="bloco-5-cutoff-curva-roc-e-fechamento" class="title-slide slide level1 center">
+<h1>Bloco 5 — Cutoff, Curva ROC e Fechamento</h1>
+
+</section>
+<section id="o-limiar-de-decisão-cutoff" class="slide level2">
+<h2>O limiar de decisão (cutoff)</h2>
+<p>Por padrão: <span class="math inline">\(p \geq 0.50\)</span> → “vence”.</p>
+<p>Subindo o corte para <strong>0.65</strong>, só cravamos vitória com mais confiança:</p>
+<ul>
+<li>modelo fica <strong>conservador</strong> → menos palpites de vitória</li>
+<li><strong>precisão ↑</strong> (os poucos palpites são mais certeiros)</li>
+<li><strong>recall ↓</strong> (deixamos escapar mais vitórias reais)</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="" aria-label="1"></a>comparar_cutoffs <span class="ot">&lt;-</span> <span class="cf">function</span>(limiar) {</span>
+<span id="cb28-2"><a href="" aria-label="2"></a>  teste_pred <span class="sc">|&gt;</span></span>
+<span id="cb28-3"><a href="" aria-label="3"></a>    <span class="fu">mutate</span>(<span class="at">pred =</span> <span class="fu">factor</span>(<span class="fu">if_else</span>(.pred_sim <span class="sc">&gt;=</span> limiar, <span class="st">"sim"</span>, <span class="st">"nao"</span>),  <span class="co"># ← aplica o corte</span></span>
+<span id="cb28-4"><a href="" aria-label="4"></a>                         <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"sim"</span>, <span class="st">"nao"</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb28-5"><a href="" aria-label="5"></a>    <span class="fu">metric_set</span>(accuracy, precision, recall, f_meas)(<span class="at">truth =</span> home_win, <span class="at">estimate =</span> pred) <span class="sc">|&gt;</span></span>
+<span id="cb28-6"><a href="" aria-label="6"></a>    <span class="fu">mutate</span>(<span class="at">cutoff =</span> limiar)</span>
+<span id="cb28-7"><a href="" aria-label="7"></a>}</span>
+<span id="cb28-8"><a href="" aria-label="8"></a></span>
+<span id="cb28-9"><a href="" aria-label="9"></a><span class="fu">bind_rows</span>(<span class="fu">comparar_cutoffs</span>(<span class="fl">0.5</span>), <span class="fu">comparar_cutoffs</span>(<span class="fl">0.65</span>)) <span class="sc">|&gt;</span>   <span class="co"># ← compara os dois limiares</span></span>
+<span id="cb28-10"><a href="" aria-label="10"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> cutoff, <span class="at">values_from =</span> .estimate, <span class="at">names_prefix =</span> <span class="st">"cut_"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 4
+  .metric   .estimator cut_0.5 cut_0.65
+  &lt;chr&gt;     &lt;chr&gt;        &lt;dbl&gt;    &lt;dbl&gt;
+1 accuracy  binary       0.562    0.672
+2 precision binary       0.467    0.667
+3 recall    binary       0.538    0.385
+4 f_meas    binary       0.5      0.488</code></pre>
+</div>
+</div>
+</section>
+<section id="curva-roc-e-auroc" class="slide level2">
+<h2>Curva ROC e AUROC</h2>
+<p>Em vez de escolher <strong>um</strong> corte, a <strong>Curva ROC</strong> testa <strong>todos os cortes ao mesmo tempo</strong>:</p>
+<ul>
+<li>Eixo y: taxa de verdadeiros positivos (recall) ↑</li>
+<li>Eixo x: taxa de falsos positivos →</li>
+<li><strong>AUROC</strong> (área sob a curva): 0.5 = chute aleatório · 1.0 = separação perfeita</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="" aria-label="1"></a><span class="fu">roc_auc</span>(teste_pred, <span class="at">truth =</span> home_win, .pred_sim)   <span class="co"># ← a área sob a curva do próximo slide</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  .metric .estimator .estimate
+  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+1 roc_auc binary         0.636</code></pre>
+</div>
+</div>
+</section>
+<section id="a-curva-roc-desenhada" class="slide level2">
+<h2>A curva ROC desenhada</h2>
+
+<img data-src="aula5-classificacao-brasileirao_files/figure-revealjs/roc-1.png" width="960" class="r-stretch"></section>
+<section id="fechamento-do-ciclo" class="slide level2">
+<h2>Fechamento do ciclo</h2>
+<p>Nosso modelo de hoje é o <strong>baseline (vanilla)</strong>: 1 variável, algoritmo linear.</p>
+<p>O AUROC modesto e o Kappa baixo <strong>estabelecem a régua</strong> — é para isso que serve um baseline.</p>
+<p>Próximos passos: mais features (engenharia de atributos) e algoritmos não lineares (Árvores, Random Forests).</p>
+<p>Mas antes… <strong>como escolher entre modelos sem contaminar o teste?</strong> ↓</p>
+</section></section>
+<section>
+<section id="bloco-6-validação-cruzada-e-regularização" class="title-slide slide level1 center">
+<h1>Bloco 6 — Validação Cruzada e Regularização</h1>
+
+</section>
+<section id="o-problema-com-um-único-split" class="slide level2">
+<h2>O problema com um único split</h2>
+<p>Nosso teste tem só 64 jogos → as métricas oscilam bastante por acaso.</p>
+<p>Solução: <strong>validação cruzada</strong>. Mas com dados temporais, o CV clássico (k-fold aleatório) vaza informação do futuro…</p>
+<p>✅ <strong>CV temporal</strong> (janela deslizante): cada fatia treina no passado e valida no futuro imediato:</p>
+<pre><code>Slice1: [======== treino ========|== validação ==]
+Slice2:          [======== treino ========|== validação ==]
+Slice3:                   [======== treino ========|== validação ==]
+Slice4:                            [======== treino ========|== validação ==]
+                                   tempo → → →</code></pre>
+</section>
+<section id="mais-features-para-o-lasso-fazer-sentido" class="slide level2">
+<h2>Mais features para o Lasso fazer sentido</h2>
+<p>Regularizar <strong>uma</strong> variável não faz sentido. Vamos dar ao modelo três saldos — e deixar o Lasso decidir quais valem a pena:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="" aria-label="1"></a>stats_home <span class="ot">&lt;-</span> treino <span class="sc">|&gt;</span> <span class="fu">group_by</span>(<span class="at">time =</span> home) <span class="sc">|&gt;</span></span>
+<span id="cb33-2"><a href="" aria-label="2"></a>  <span class="fu">summarise</span>(<span class="at">jogos =</span> <span class="fu">n</span>(), <span class="at">pontos =</span> <span class="fu">sum</span>(<span class="dv">3</span> <span class="sc">*</span> (gols_home <span class="sc">&gt;</span> gols_away) <span class="sc">+</span> (gols_home <span class="sc">==</span> gols_away)),</span>
+<span id="cb33-3"><a href="" aria-label="3"></a>            <span class="at">gm =</span> <span class="fu">sum</span>(gols_home), <span class="at">gs =</span> <span class="fu">sum</span>(gols_away))          <span class="co"># ← gols marcados/sofridos</span></span>
+<span id="cb33-4"><a href="" aria-label="4"></a>stats_away <span class="ot">&lt;-</span> treino <span class="sc">|&gt;</span> <span class="fu">group_by</span>(<span class="at">time =</span> away) <span class="sc">|&gt;</span></span>
+<span id="cb33-5"><a href="" aria-label="5"></a>  <span class="fu">summarise</span>(<span class="at">jogos =</span> <span class="fu">n</span>(), <span class="at">pontos =</span> <span class="fu">sum</span>(<span class="dv">3</span> <span class="sc">*</span> (gols_away <span class="sc">&gt;</span> gols_home) <span class="sc">+</span> (gols_away <span class="sc">==</span> gols_home)),</span>
+<span id="cb33-6"><a href="" aria-label="6"></a>            <span class="at">gm =</span> <span class="fu">sum</span>(gols_away), <span class="at">gs =</span> <span class="fu">sum</span>(gols_home))</span>
+<span id="cb33-7"><a href="" aria-label="7"></a></span>
+<span id="cb33-8"><a href="" aria-label="8"></a>ratings2 <span class="ot">&lt;-</span> <span class="fu">full_join</span>(stats_home, stats_away, <span class="at">by =</span> <span class="st">"time"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb33-9"><a href="" aria-label="9"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="sc">-</span>time, <span class="sc">~</span> <span class="fu">replace_na</span>(.x, <span class="dv">0</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb33-10"><a href="" aria-label="10"></a>  <span class="fu">transmute</span>(time,</span>
+<span id="cb33-11"><a href="" aria-label="11"></a>            <span class="at">aproveitamento =</span> (pontos.x <span class="sc">+</span> pontos.y) <span class="sc">/</span> (<span class="dv">3</span> <span class="sc">*</span> (jogos.x <span class="sc">+</span> jogos.y)),</span>
+<span id="cb33-12"><a href="" aria-label="12"></a>            <span class="at">gm_medio =</span> (gm.x <span class="sc">+</span> gm.y) <span class="sc">/</span> (jogos.x <span class="sc">+</span> jogos.y),</span>
+<span id="cb33-13"><a href="" aria-label="13"></a>            <span class="at">gs_medio =</span> (gs.x <span class="sc">+</span> gs.y) <span class="sc">/</span> (jogos.x <span class="sc">+</span> jogos.y))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="três-features-de-saldo" class="slide level2">
+<h2>Três features de saldo</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="" aria-label="1"></a>add_features2 <span class="ot">&lt;-</span> <span class="cf">function</span>(df, ratings) {</span>
+<span id="cb34-2"><a href="" aria-label="2"></a>  df <span class="sc">|&gt;</span></span>
+<span id="cb34-3"><a href="" aria-label="3"></a>    <span class="fu">left_join</span>(ratings, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"home"</span> <span class="ot">=</span> <span class="st">"time"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb34-4"><a href="" aria-label="4"></a>    <span class="fu">rename_with</span>(<span class="sc">~</span> <span class="fu">paste0</span>(.x, <span class="st">"_home"</span>), <span class="fu">c</span>(aproveitamento, gm_medio, gs_medio)) <span class="sc">|&gt;</span></span>
+<span id="cb34-5"><a href="" aria-label="5"></a>    <span class="fu">left_join</span>(ratings, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"away"</span> <span class="ot">=</span> <span class="st">"time"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb34-6"><a href="" aria-label="6"></a>    <span class="fu">rename_with</span>(<span class="sc">~</span> <span class="fu">paste0</span>(.x, <span class="st">"_away"</span>), <span class="fu">c</span>(aproveitamento, gm_medio, gs_medio)) <span class="sc">|&gt;</span></span>
+<span id="cb34-7"><a href="" aria-label="7"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb34-8"><a href="" aria-label="8"></a>      <span class="at">saldo_forca  =</span> aproveitamento_home <span class="sc">-</span> aproveitamento_away,  <span class="co"># ← quem está melhor</span></span>
+<span id="cb34-9"><a href="" aria-label="9"></a>      <span class="at">saldo_ataque =</span> gm_medio_home <span class="sc">-</span> gm_medio_away,              <span class="co"># ← quem marca mais</span></span>
+<span id="cb34-10"><a href="" aria-label="10"></a>      <span class="at">saldo_defesa =</span> gs_medio_away <span class="sc">-</span> gs_medio_home               <span class="co"># ← quem sofre menos</span></span>
+<span id="cb34-11"><a href="" aria-label="11"></a>    )</span>
+<span id="cb34-12"><a href="" aria-label="12"></a>}</span>
+<span id="cb34-13"><a href="" aria-label="13"></a></span>
+<span id="cb34-14"><a href="" aria-label="14"></a>treino_f2 <span class="ot">&lt;-</span> <span class="fu">add_features2</span>(treino, ratings2)</span>
+<span id="cb34-15"><a href="" aria-label="15"></a>teste_f2  <span class="ot">&lt;-</span> <span class="fu">add_features2</span>(teste, ratings2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="regularização-lasso-a-ideia" class="slide level2">
+<h2>Regularização Lasso — a ideia</h2>
+<p>A Log-Loss sozinha pode <strong>superajustar</strong> (decorar o treino). O <strong>Lasso (L1)</strong> adiciona um pedágio por coeficiente grande:</p>
+<p><span class="math display">\[\min_{\beta} \;\; \underbrace{\text{LogLoss}(\beta)}_{\text{acertar o treino}} + \;\; \lambda \underbrace{\sum_j |\beta_j|}_{\text{pedágio por complexidade}}\]</span></p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Símbolo</th>
+<th>O que é</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\lambda\)</span></td>
+<td><strong>Intensidade da penalização</strong> — nosso hiperparâmetro a otimizar</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\sum_j \vert\beta_j\vert\)</span></td>
+<td>Soma dos tamanhos dos pesos (norma L1)</td>
+</tr>
+</tbody>
+</table>
+<p>A norma L1 tem uma propriedade famosa: ela <strong>zera coeficientes</strong> de variáveis que não carregam sua parte do pedágio → seleção automática de features.</p>
+</section>
+<section id="montando-o-cv-temporal-e-os-dois-competidores" class="slide level2">
+<h2>Montando o CV temporal e os dois competidores</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="" aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">4815</span>)</span>
+<span id="cb35-2"><a href="" aria-label="2"></a>cv_folds <span class="ot">&lt;-</span> <span class="fu">sliding_window</span>(treino_f2,          <span class="co"># ← janelas deslizantes no tempo</span></span>
+<span id="cb35-3"><a href="" aria-label="3"></a>                           <span class="at">lookback =</span> <span class="dv">90</span>,      <span class="co"># ← treina com 91 jogos</span></span>
+<span id="cb35-4"><a href="" aria-label="4"></a>                           <span class="at">assess_stop =</span> <span class="dv">25</span>,   <span class="co"># ← valida nos 25 seguintes</span></span>
+<span id="cb35-5"><a href="" aria-label="5"></a>                           <span class="at">step =</span> <span class="dv">20</span>)          <span class="co"># ← avança 20 jogos por fatia</span></span>
+<span id="cb35-6"><a href="" aria-label="6"></a></span>
+<span id="cb35-7"><a href="" aria-label="7"></a>spec_vanilla <span class="ot">&lt;-</span> <span class="fu">logistic_reg</span>() <span class="sc">|&gt;</span></span>
+<span id="cb35-8"><a href="" aria-label="8"></a>  <span class="fu">set_engine</span>(<span class="st">"glm"</span>)                                        <span class="co"># ← sem penalização</span></span>
+<span id="cb35-9"><a href="" aria-label="9"></a></span>
+<span id="cb35-10"><a href="" aria-label="10"></a>spec_lasso <span class="ot">&lt;-</span> <span class="fu">logistic_reg</span>(<span class="at">penalty =</span> <span class="fu">tune</span>(), <span class="at">mixture =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb35-11"><a href="" aria-label="11"></a>  <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>)                                     <span class="co"># ← λ será otimizado; mixture=1 → Lasso</span></span>
+<span id="cb35-12"><a href="" aria-label="12"></a></span>
+<span id="cb35-13"><a href="" aria-label="13"></a>formula_modelo <span class="ot">&lt;-</span> home_win <span class="sc">~</span> saldo_forca <span class="sc">+</span> saldo_ataque <span class="sc">+</span> saldo_defesa</span>
+<span id="cb35-14"><a href="" aria-label="14"></a>wf_vanilla <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> <span class="fu">add_model</span>(spec_vanilla) <span class="sc">|&gt;</span> <span class="fu">add_formula</span>(formula_modelo)</span>
+<span id="cb35-15"><a href="" aria-label="15"></a>wf_lasso   <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> <span class="fu">add_model</span>(spec_lasso)   <span class="sc">|&gt;</span> <span class="fu">add_formula</span>(formula_modelo)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="rodando-a-validação-cruzada" class="slide level2">
+<h2>Rodando a validação cruzada</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="" aria-label="1"></a>mset <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(roc_auc, mn_log_loss, accuracy)     <span class="co"># ← métricas avaliadas em cada fatia</span></span>
+<span id="cb36-2"><a href="" aria-label="2"></a></span>
+<span id="cb36-3"><a href="" aria-label="3"></a>res_vanilla <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(wf_vanilla, <span class="at">resamples =</span> cv_folds, <span class="at">metrics =</span> mset)</span>
+<span id="cb36-4"><a href="" aria-label="4"></a></span>
+<span id="cb36-5"><a href="" aria-label="5"></a>grid_lasso <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(<span class="fu">penalty</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">0</span>)), <span class="at">levels =</span> <span class="dv">10</span>)  <span class="co"># ← 10 valores de λ</span></span>
+<span id="cb36-6"><a href="" aria-label="6"></a></span>
+<span id="cb36-7"><a href="" aria-label="7"></a>res_lasso <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(wf_lasso, <span class="at">resamples =</span> cv_folds,</span>
+<span id="cb36-8"><a href="" aria-label="8"></a>                       <span class="at">grid =</span> grid_lasso, <span class="at">metrics =</span> mset)           <span class="co"># ← CV para cada λ</span></span>
+<span id="cb36-9"><a href="" aria-label="9"></a></span>
+<span id="cb36-10"><a href="" aria-label="10"></a><span class="fu">collect_metrics</span>(res_vanilla)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 6
+  .metric     .estimator  mean     n std_err .config        
+  &lt;chr&gt;       &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;          
+1 accuracy    binary     0.56      4  0.0490 pre0_mod0_post0
+2 mn_log_loss binary     0.704     4  0.0637 pre0_mod0_post0
+3 roc_auc     binary     0.637     4  0.0757 pre0_mod0_post0</code></pre>
+</div>
+</div>
+</section>
+<section id="otimização-do-λ-o-perfil-de-regularização" class="slide level2">
+<h2>Otimização do λ: o perfil de regularização</h2>
+
+<img data-src="aula5-classificacao-brasileirao_files/figure-revealjs/autoplot-lasso-1.png" width="960" class="r-stretch"><p>Leitura: λ pequeno → modelo livre; λ grande demais → o pedágio <strong>mata todos os coeficientes</strong> e o AUROC desaba para 0.5 (chute aleatório). O melhor λ fica no platô intermediário.</p>
+</section>
+<section id="comparando-os-modelos-média-das-fatias-de-cv" class="slide level2">
+<h2>Comparando os modelos (média das fatias de CV)</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="" aria-label="1"></a><span class="fu">collect_metrics</span>(res_lasso) <span class="sc">|&gt;</span></span>
+<span id="cb38-2"><a href="" aria-label="2"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb38-3"><a href="" aria-label="3"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(mean)) <span class="sc">|&gt;</span></span>
+<span id="cb38-4"><a href="" aria-label="4"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)                                  <span class="co"># ← melhor λ do Lasso</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 7
+  penalty .metric .estimator  mean     n std_err .config         
+    &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;           
+1 0.00599 roc_auc binary     0.642     4  0.0734 pre0_mod05_post0</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="" aria-label="1"></a><span class="fu">collect_metrics</span>(res_vanilla) <span class="sc">|&gt;</span></span>
+<span id="cb40-2"><a href="" aria-label="2"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>)              <span class="co"># ← vanilla, mesmas fatias</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 6
+  .metric .estimator  mean     n std_err .config        
+  &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;          
+1 roc_auc binary     0.637     4  0.0757 pre0_mod0_post0</code></pre>
+</div>
+</div>
+<p>O Lasso vence por uma margem pequena, mas <strong>consistente</strong> — e com um modelo mais simples.</p>
+</section>
+<section id="modelo-final-travar-o-λ-e-re-treinar" class="slide level2">
+<h2>Modelo final: travar o λ e re-treinar</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="" aria-label="1"></a>best_lambda <span class="ot">&lt;-</span> <span class="fu">select_best</span>(res_lasso, <span class="at">metric =</span> <span class="st">"roc_auc"</span>)       <span class="co"># ← λ vencedor do CV</span></span>
+<span id="cb42-2"><a href="" aria-label="2"></a></span>
+<span id="cb42-3"><a href="" aria-label="3"></a>fit_lasso <span class="ot">&lt;-</span> <span class="fu">finalize_workflow</span>(wf_lasso, best_lambda) <span class="sc">|&gt;</span>        <span class="co"># ← trava o λ no workflow</span></span>
+<span id="cb42-4"><a href="" aria-label="4"></a>  <span class="fu">fit</span>(<span class="at">data =</span> treino_f2)                                          <span class="co"># ← re-treina com </span><span class="al">TODO</span><span class="co"> o treino</span></span>
+<span id="cb42-5"><a href="" aria-label="5"></a></span>
+<span id="cb42-6"><a href="" aria-label="6"></a><span class="fu">tidy</span>(fit_lasso)                                                  <span class="co"># ← quem sobreviveu ao Lasso?</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 3
+  term         estimate penalty
+  &lt;chr&gt;           &lt;dbl&gt;   &lt;dbl&gt;
+1 (Intercept)    0.0537 0.00599
+2 saldo_forca   -3.57   0.00599
+3 saldo_ataque   0      0.00599
+4 saldo_defesa  -0.318  0.00599</code></pre>
+</div>
+</div>
+<p>Repare: o Lasso <strong>zerou</strong> <code>saldo_ataque</code> — a variável não pagava seu pedágio.</p>
+</section>
+<section id="veredito-no-teste-uma-única-vez" class="slide level2">
+<h2>Veredito no teste (uma única vez!)</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="" aria-label="1"></a>teste_pred_lasso <span class="ot">&lt;-</span> <span class="fu">predict</span>(fit_lasso, teste_f2, <span class="at">type =</span> <span class="st">"prob"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb44-2"><a href="" aria-label="2"></a>  <span class="fu">bind_cols</span>(teste_f2)</span>
+<span id="cb44-3"><a href="" aria-label="3"></a></span>
+<span id="cb44-4"><a href="" aria-label="4"></a><span class="fu">roc_auc</span>(teste_pred_lasso, <span class="at">truth =</span> home_win, .pred_sim)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  .metric .estimator .estimate
+  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+1 roc_auc binary         0.634</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="" aria-label="1"></a><span class="fu">mn_log_loss</span>(teste_pred_lasso, <span class="at">truth =</span> home_win, .pred_sim)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  .metric     .estimator .estimate
+  &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;
+1 mn_log_loss binary         0.672</code></pre>
+</div>
+</div>
+<p>O teste só é tocado <strong>agora</strong>, depois de todas as decisões tomadas via CV — senão ele vira parte do processo de desenvolvimento e perde o valor.</p>
+</section>
+<section id="bônus-prevendo-o-restante-do-campeonato" class="slide level2">
+<h2>Bônus: prevendo o restante do campeonato</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="" aria-label="1"></a>futuro <span class="ot">&lt;-</span> brasileirao_2026 <span class="sc">|&gt;</span></span>
+<span id="cb48-2"><a href="" aria-label="2"></a>  <span class="fu">filter</span>(score <span class="sc">==</span> <span class="st">"x"</span>) <span class="sc">|&gt;</span>                 <span class="co"># ← jogos que ainda não aconteceram</span></span>
+<span id="cb48-3"><a href="" aria-label="3"></a>  <span class="fu">add_features2</span>(ratings2)</span>
+<span id="cb48-4"><a href="" aria-label="4"></a></span>
+<span id="cb48-5"><a href="" aria-label="5"></a><span class="fu">predict</span>(fit_lasso, <span class="at">new_data =</span> futuro, <span class="at">type =</span> <span class="st">"prob"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb48-6"><a href="" aria-label="6"></a>  <span class="fu">bind_cols</span>(futuro) <span class="sc">|&gt;</span></span>
+<span id="cb48-7"><a href="" aria-label="7"></a>  <span class="fu">select</span>(date, home, away, .pred_sim) <span class="sc">|&gt;</span></span>
+<span id="cb48-8"><a href="" aria-label="8"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(.pred_sim)) <span class="sc">|&gt;</span></span>
+<span id="cb48-9"><a href="" aria-label="9"></a>  <span class="fu">head</span>(<span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 4
+   date       home         away        .pred_sim
+   &lt;date&gt;     &lt;chr&gt;        &lt;chr&gt;           &lt;dbl&gt;
+ 1 2026-12-02 Flamengo     Chapecoense     0.897
+ 2 2026-11-04 Palmeiras    Remo            0.867
+ 3 2026-10-28 Bragantino   Chapecoense     0.824
+ 4 2026-12-02 Palmeiras    Coritiba        0.784
+ 5 2026-09-12 Palmeiras    São Paulo       0.781
+ 6 2026-10-07 Vitória      Chapecoense     0.771
+ 7 2026-11-04 Flamengo     Grêmio          0.771
+ 8 2026-11-22 Athletico PR Remo            0.767
+ 9 2026-09-19 Atlético MG  Chapecoense     0.763
+10 2026-10-18 Botafogo     Chapecoense     0.749</code></pre>
+</div>
+</div>
+<div class="callout callout-warning callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Warning</strong></p>
+</div>
+<div class="callout-content">
+<p>Ratings calculados só com o treino → times que melhoraram na segunda metade estão subavaliados. Atualizar ratings e re-treinar é parte do exercício!</p>
+</div>
+</div>
+</div>
+</section>
+<section id="como-o-modelo-prevê-o-fim-do-campeonato" class="slide level2">
+<h2>Como o modelo prevê o fim do campeonato?</h2>
+<p>Somando os pontos já conquistados com os pontos dos jogos futuros segundo a <strong>decisão do modelo</strong> (<span class="math inline">\(p \geq 0.5\)</span> → vitória do mandante; senão, vitória do visitante):</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="" aria-label="1"></a><span class="co"># pontos já conquistados nos jogos realizados</span></span>
+<span id="cb50-2"><a href="" aria-label="2"></a>pts_home <span class="ot">&lt;-</span> jogos <span class="sc">|&gt;</span></span>
+<span id="cb50-3"><a href="" aria-label="3"></a>  <span class="fu">mutate</span>(<span class="at">p =</span> <span class="fu">case_when</span>(gols_home <span class="sc">&gt;</span> gols_away <span class="sc">~</span> <span class="dv">3</span>, gols_home <span class="sc">==</span> gols_away <span class="sc">~</span> <span class="dv">1</span>, <span class="cn">TRUE</span> <span class="sc">~</span> <span class="dv">0</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb50-4"><a href="" aria-label="4"></a>  <span class="fu">count</span>(<span class="at">time =</span> home, <span class="at">wt =</span> p, <span class="at">name =</span> <span class="st">"pontos"</span>)            <span class="co"># ← pontos como mandante</span></span>
+<span id="cb50-5"><a href="" aria-label="5"></a>pts_away <span class="ot">&lt;-</span> jogos <span class="sc">|&gt;</span></span>
+<span id="cb50-6"><a href="" aria-label="6"></a>  <span class="fu">mutate</span>(<span class="at">p =</span> <span class="fu">case_when</span>(gols_away <span class="sc">&gt;</span> gols_home <span class="sc">~</span> <span class="dv">3</span>, gols_away <span class="sc">==</span> gols_home <span class="sc">~</span> <span class="dv">1</span>, <span class="cn">TRUE</span> <span class="sc">~</span> <span class="dv">0</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb50-7"><a href="" aria-label="7"></a>  <span class="fu">count</span>(<span class="at">time =</span> away, <span class="at">wt =</span> p, <span class="at">name =</span> <span class="st">"pontos"</span>)            <span class="co"># ← pontos como visitante</span></span>
+<span id="cb50-8"><a href="" aria-label="8"></a></span>
+<span id="cb50-9"><a href="" aria-label="9"></a>tabela_atual <span class="ot">&lt;-</span> <span class="fu">full_join</span>(pts_home, pts_away, <span class="at">by =</span> <span class="st">"time"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb50-10"><a href="" aria-label="10"></a>  <span class="fu">transmute</span>(time, <span class="at">pontos_atuais =</span> pontos.x <span class="sc">+</span> pontos.y)</span>
+<span id="cb50-11"><a href="" aria-label="11"></a></span>
+<span id="cb50-12"><a href="" aria-label="12"></a><span class="co"># decisão do modelo em cada jogo futuro</span></span>
+<span id="cb50-13"><a href="" aria-label="13"></a>fut_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(fit_lasso, <span class="at">new_data =</span> futuro, <span class="at">type =</span> <span class="st">"prob"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb50-14"><a href="" aria-label="14"></a>  <span class="fu">bind_cols</span>(futuro)</span>
+<span id="cb50-15"><a href="" aria-label="15"></a></span>
+<span id="cb50-16"><a href="" aria-label="16"></a>prev_home <span class="ot">&lt;-</span> fut_pred <span class="sc">|&gt;</span> <span class="fu">filter</span>(.pred_sim <span class="sc">&gt;=</span> <span class="fl">0.5</span>) <span class="sc">|&gt;</span></span>
+<span id="cb50-17"><a href="" aria-label="17"></a>  <span class="fu">count</span>(<span class="at">time =</span> home, <span class="at">wt =</span> <span class="dv">3</span>, <span class="at">name =</span> <span class="st">"prev"</span>)              <span class="co"># ← 3 pts por vitória prevista em casa</span></span>
+<span id="cb50-18"><a href="" aria-label="18"></a>prev_away <span class="ot">&lt;-</span> fut_pred <span class="sc">|&gt;</span> <span class="fu">filter</span>(.pred_sim <span class="sc">&lt;</span> <span class="fl">0.5</span>) <span class="sc">|&gt;</span></span>
+<span id="cb50-19"><a href="" aria-label="19"></a>  <span class="fu">count</span>(<span class="at">time =</span> away, <span class="at">wt =</span> <span class="dv">3</span>, <span class="at">name =</span> <span class="st">"prev"</span>)              <span class="co"># ← 3 pts por vitória prevista fora</span></span>
+<span id="cb50-20"><a href="" aria-label="20"></a></span>
+<span id="cb50-21"><a href="" aria-label="21"></a>tabela_final <span class="ot">&lt;-</span> tabela_atual <span class="sc">|&gt;</span></span>
+<span id="cb50-22"><a href="" aria-label="22"></a>  <span class="fu">full_join</span>(prev_home, <span class="at">by =</span> <span class="st">"time"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb50-23"><a href="" aria-label="23"></a>  <span class="fu">full_join</span>(prev_away, <span class="at">by =</span> <span class="st">"time"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb50-24"><a href="" aria-label="24"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="sc">-</span>time, <span class="sc">~</span> <span class="fu">replace_na</span>(.x, <span class="dv">0</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb50-25"><a href="" aria-label="25"></a>  <span class="fu">transmute</span>(time,</span>
+<span id="cb50-26"><a href="" aria-label="26"></a>            pontos_atuais,</span>
+<span id="cb50-27"><a href="" aria-label="27"></a>            <span class="at">pontos_previstos =</span> prev.x <span class="sc">+</span> prev.y,</span>
+<span id="cb50-28"><a href="" aria-label="28"></a>            <span class="at">total_previsto =</span> pontos_atuais <span class="sc">+</span> pontos_previstos) <span class="sc">|&gt;</span></span>
+<span id="cb50-29"><a href="" aria-label="29"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(total_previsto))</span>
+<span id="cb50-30"><a href="" aria-label="30"></a></span>
+<span id="cb50-31"><a href="" aria-label="31"></a>tabela_final</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 20 × 4
+   time          pontos_atuais pontos_previstos total_previsto
+   &lt;chr&gt;                 &lt;dbl&gt;            &lt;dbl&gt;          &lt;dbl&gt;
+ 1 Flamengo                 54                6             60
+ 2 Palmeiras                53                6             59
+ 3 Athletico PR             45                6             51
+ 4 Fluminense               45                6             51
+ 5 Bahia                    43                6             49
+ 6 Cruzeiro                 42                6             48
+ 7 Coritiba                 37                6             43
+ 8 Atlético MG              36                6             42
+ 9 Bragantino               35                6             41
+10 São Paulo                33                6             39
+11 Corinthians              32                6             38
+12 Vitória                  32                6             38
+13 Botafogo                 31                6             37
+14 Santos                   32                3             35
+15 Grêmio                   28                6             34
+16 Mirassol                 28                3             31
+17 Vasco da Gama            25                6             31
+18 Internacional            25                3             28
+19 Remo                     23                3             26
+20 Chapecoense              17                0             17</code></pre>
+</div>
+</div>
+<div class="callout callout-warning callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Limitações desta projeção</strong></p>
+</div>
+<div class="callout-content">
+<p>Nosso modelo é <strong>binário</strong>: ele não prevê empates — cada jogo futuro vira 3 pontos para alguém, então os totais ficam inflados em relação à realidade. Some-se a isso os ratings congelados no treino. É uma <strong>projeção didática</strong>, não um palpite para apostas!</p>
+</div>
+</div>
+</div>
+</section>
+<section id="resumo-da-aula" class="slide level2 scrollable">
+<h2>Resumo da aula</h2>
+<ol type="1">
+<li><strong>Sigmoide</strong> espreme o placar linear <span class="math inline">\(z\)</span> para <span class="math inline">\([0,1]\)</span> → probabilidade</li>
+<li><strong>Log-Loss</strong> pune arrogância → probabilidades calibradas</li>
+<li><strong>Acurácia mente</strong> em classes assimétricas → matriz de confusão</li>
+<li><strong>Precisão / Recall / F1 / Kappa</strong> → cada uma responde a um custo de negócio</li>
+<li><strong>Cutoff e ROC-AUC</strong> → o ponto de corte é uma decisão nossa, não do modelo</li>
+<li><strong>CV temporal + Lasso</strong> → comparar modelos sem contaminar o teste, e deixar a regularização podar o que não agrega</li>
+</ol>
+
+</section></section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="aula5-classificacao-brasileirao_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="aula5-classificacao-brasileirao_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="aula5-classificacao-brasileirao_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="aula5-classificacao-brasileirao_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="aula5-classificacao-brasileirao_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="aula5-classificacao-brasileirao_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="aula5-classificacao-brasileirao_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="aula5-classificacao-brasileirao_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="aula5-classificacao-brasileirao_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="aula5-classificacao-brasileirao_files/libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': true,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: false,
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1050,
+
+        height: 700,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    
+
+    <script>
+
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+
+      // slide changes (different for each slide format).
+
+      (function () {
+
+        // dispatch for htmlwidgets
+
+        function fireSlideEnter() {
+
+          const event = window.document.createEvent("Event");
+
+          event.initEvent("slideenter", true, true);
+
+          window.document.dispatchEvent(event);
+
+        }
+
+    
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+
+          fireSlideEnter();
+
+    
+
+          // dispatch for shiny
+
+          if (window.jQuery) {
+
+            if (previousSlide) {
+
+              window.jQuery(previousSlide).trigger("hidden");
+
+            }
+
+            if (currentSlide) {
+
+              window.jQuery(currentSlide).trigger("shown");
+
+            }
+
+          }
+
+        }
+
+    
+
+        // hookup for slidy
+
+        if (window.w3c_slidy) {
+
+          window.w3c_slidy.add_observer(function (slide_num) {
+
+            // slide_num starts at position 1
+
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+
+          });
+
+        }
+
+    
+
+      })();
+
+    </script>
+
+    
+
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>

@@ -1,0 +1,959 @@
+---
+title: "Classificação e Métricas de Avaliação"
+subtitle: "Machine Learning e Deep Learning — Estudo de caso: Brasileirão 2026"
+author: "Aula 5"
+format:
+  revealjs:
+    theme: simple
+    slide-level: 2
+    smaller: true
+    scrollable: true
+execute:
+  echo: true
+  warning: false
+  message: false
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# Abertura e dados
+
+## A pergunta mudou
+
+Até aqui: **regressão linear** → prever valores contínuos (preço de
+imóvel, valor de venda).
+
+Hoje a pergunta de negócio é binária:
+
+> **"O time mandante vai vencer a partida?" (Sim / Não)**
+
+Isso é um problema de **classificação**. O produto do modelo deixa de
+ser um número qualquer e passa a ser uma **probabilidade entre 0 e 1**.
+
+## O dataset
+
+```{r}
+#| label: setup
+library(tidyverse)    # ← manipulação de dados e gráficos
+library(tidymodels)   # ← modelagem: rsample, parsnip, yardstick, tune...
+
+brasileirao_2026 <- read_csv("C:/Users/T14/Downloads/brasileirao_2026.csv")
+
+glimpse(brasileirao_2026)
+```
+
+- Jogos que ainda não aconteceram têm `score == "x"` → ficam de fora do
+  treino
+- 380 jogos no total; cada time joga 19 vezes em casa e 19 fora
+
+## Preparação dos dados
+
+```{r}
+#| label: preparacao
+jogos <- brasileirao_2026 |>
+  filter(score != "x") |>                                    # ← só jogos já realizados
+  separate(score, into = c("gols_home", "gols_away"),        # ← "2x1" vira duas colunas
+           sep = "x", convert = TRUE) |>
+  mutate(
+    home_win = factor(
+      if_else(gols_home > gols_away, "sim", "nao"),          # ← nossa variável-alvo
+      levels = c("sim", "nao")   # ← 1º nível = evento de interesse
+    )
+  ) |>
+  arrange(date)                                              # ← ordem cronológica importa!
+
+jogos |> count(home_win) |> mutate(proporcao = n / sum(n))
+```
+
+O mandante venceu \~46% dos jogos. **Guarde esse número** — ele volta no
+Bloco 3.
+
+# Bloco 1 — Da Regressão à Classificação
+
+## Por que não usar a reta da regressão linear?
+
+Se usássemos uma reta para prever vitória do mandante, o modelo poderia
+responder $+2.5$ ou $-0.4$...
+
+...mas probabilidade só existe entre $0$ (0%) e $1$ (100%).
+
+Precisamos de uma função que **"esprema"** qualquer número real para o
+intervalo $[0, 1]$.
+
+## A Função Sigmoide — símbolo por símbolo
+
+$$\sigma(z) = \frac{1}{1 + e^{-z}}$$
+
+| Símbolo | O que é | Intuição |
+|------------------------|------------------------|------------------------|
+| $z$ | O **"placar interno"** do modelo (pode ser qualquer número de $-\infty$ a $+\infty$) | Quanto maior $z$, mais o modelo "acredita" na vitória do mandante |
+| $e$ | Constante de Euler ($\approx 2.718$) | Motor do crescimento/decaimento exponencial |
+| $e^{-z}$ | Decai quando $z$ cresce | É o mecanismo do "espremedor" |
+| $\sigma(z)$ | A saída: probabilidade entre 0 e 1 | Nossa previsão final |
+
+## A Função Sigmoide — nos extremos
+
+$$\sigma(z) = \frac{1}{1 + e^{-z}}$$
+
+- $z \to +\infty \Rightarrow e^{-z} \to 0 \Rightarrow \sigma \to \frac{1}{1+0} = 1$
+  (**100%**)
+- $z \to -\infty \Rightarrow e^{-z} \to +\infty \Rightarrow \sigma \to \frac{1}{1+\infty} = 0$
+  (**0%**)
+- $z = 0 \Rightarrow \sigma = \frac{1}{1+1} = 0.5$ (**moeda ao ar**:
+  total indecisão)
+
+A sigmoide nunca toca 0 ou 1 — o modelo nunca tem certeza absoluta.
+
+## A sigmoide desenhada
+
+```{r}
+#| label: sigmoide
+#| echo: false
+#| fig-height: 4.5
+sigmoide <- function(z) 1 / (1 + exp(-z))   # ← a equação do slide anterior, em R
+
+tibble(z = seq(-6, 6, length.out = 300)) |>      # ← eixo x: placar interno de -6 a +6
+  mutate(prob = sigmoide(z)) |>                  # ← eixo y: probabilidade espremida
+  ggplot(aes(x = z, y = prob)) +
+  geom_line(linewidth = 1.2) +
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red") +
+  labs(x = "Placar interno (z)", y = "P(vitória do mandante)") +
+  theme_minimal()
+```
+
+## A sigmoide em ação: features × pesos → probabilidade
+
+Como um jogo vira um ponto na curva:
+
+- Os $x$ são as **features** do jogo: o time é mandante? qual a **forma
+  recente** (quantos jogos venceu ultimamente)? qual o saldo de força?
+- Os $\beta$ são os **pesos**: o quanto cada feature importa. Nem tudo
+  importa igual! Um time de grande história, como o Vasco, mas em fase
+  ruim, recebe peso **menor** na forma recente do que Flamengo e
+  Palmeiras, que vivem grande momento.
+- Cada $\beta_j \cdot x_j$ **empurra o placar** $z$ um pouco; a soma
+  total entra na sigmoide e vira o ponto vermelho: a probabilidade
+  final.
+
+## A sigmoide em ação: o gráfico
+
+```{r}
+#| label: sigmoide-features
+#| echo: false
+#| fig-height: 5.5
+# Exemplo hipotético: 3 features, 3 pesos
+b0 <- 0.05
+contrib <- tibble(
+  feature = c("x1: saldo de força", "x2: forma recente", "x3: elenco/tradição"),
+  x       = c(0.60, 0.40, 0.20),        # ← valores das features neste jogo
+  beta    = c(3.0, 1.5, 0.5)            # ← pesos: o que importa mais pro modelo
+) |>
+  mutate(bx = beta * x,                 # ← quanto cada feature empurra o placar
+         inicio = b0 + lag(cumsum(bx), default = 0),
+         fim = inicio + bx)
+
+z_ex <- b0 + sum(contrib$bx)            # ← placar final = soma das contribuições
+p_ex <- sigmoide(z_ex)                  # ← o pontão vermelho no gráfico
+
+tibble(z = seq(-6, 6, length.out = 300)) |>
+  mutate(prob = sigmoide(z)) |>
+  ggplot(aes(x = z, y = prob)) +
+  geom_line(linewidth = 1.2) +
+  geom_segment(data = contrib,                          # ← setinhas: cada β·x empurrando z
+               aes(x = inicio, xend = fim, y = 0.03, yend = 0.03, color = feature),
+               arrow = arrow(length = unit(0.2, "cm")), linewidth = 1.4,
+               inherit.aes = FALSE) +
+  geom_point(aes(x = z_ex, y = p_ex), size = 6, color = "red") +   # ← a probabilidade final
+  geom_segment(aes(x = z_ex, xend = z_ex, y = 0, yend = p_ex),
+               linetype = "dashed", color = "red") +
+  geom_segment(aes(x = -6, xend = z_ex, y = p_ex, yend = p_ex),
+               linetype = "dashed", color = "red") +
+  annotate("text", x = z_ex, y = p_ex + 0.08, color = "red", fontface = "bold",
+           label = paste0("P(vitória) = σ(z) ≈ ", round(p_ex, 2))) +
+  annotate("text", x = -5.9, y = 0.55, hjust = 0,
+           label = paste0("z = β0 + β1·x1 + β2·x2 + β3·x3\n",
+                          "= 0.05 + 3.0×0.60 + 1.5×0.40 + 0.5×0.20\n",
+                          "= ", round(z_ex, 2))) +
+  labs(x = "Placar interno z", y = "P(vitória do mandante)", color = "Contribuição") +
+  theme_minimal()
+```
+
+## De onde vem o $z$? A combinação linear
+
+$$z = \beta_0 + \beta_1 \cdot x_1 + \beta_2 \cdot x_2 + \dots
+$$$$z = \beta_0 + \beta_1 \cdot x_1 + \beta_2 \cdot x_2 + \dots$$
+
+| Símbolo | O que é | No futebol |
+|------------------------|------------------------|------------------------|
+| $x_1, x_2, \dots$ | As **variáveis** (features) que descrevem o jogo | Saldo de força, saldo de gols, momento... |
+| $\beta_1, \beta_2, \dots$ | Os **pesos** que o algoritmo aprende | Quanto cada variável empurra o placar a favor (ou contra) |
+| $\beta_0$ | O **intercepto**: o valor de $z$ quando tudo é zero | Times iguais jogando → o que sobra é a **vantagem de jogar em casa** |
+
+**Regressão Logística = combinação linear + sigmoide:**
+$P(\text{vitória}) = \sigma(\beta_0 + \beta_1 x_1 + \dots)$
+
+## A variável do modelo: saldo de forças
+
+Força de cada time = **aproveitamento de pontos** (pontos conquistados ÷
+pontos disputados):
+
+```{r}
+#| label: ratings
+stats_home <- jogos |>
+  group_by(time = home) |>                                # ← desempenho jogando em casa
+  summarise(jogos = n(),
+            pontos = sum(3 * (gols_home > gols_away) + (gols_home == gols_away)))
+
+stats_away <- jogos |>
+  group_by(time = away) |>                                # ← desempenho jogando fora
+  summarise(jogos = n(),
+            pontos = sum(3 * (gols_away > gols_home) + (gols_away == gols_home)))
+
+ratings <- full_join(stats_home, stats_away, by = "time") |>   # ← junta casa + fora
+  mutate(across(-time, ~ replace_na(.x, 0))) |>
+  transmute(time, aproveitamento = (pontos.x + pontos.y) / (3 * (jogos.x + jogos.y)))
+```
+
+## Saldo de forças → probabilidade
+
+```{r}
+#| label: gancho-sigmoide
+saldo <- 0.77 - 0.17    # ← time forte (77%) recebe time fraco (17%)
+saldo
+sigmoide(4 * saldo)     # ← a sigmoide converte o saldo em probabilidade
+```
+
+::: fragment
+Ideia central da aula: o modelo **calcula o saldo de forças** entre
+mandante e visitante e a sigmoide o **converte direto em probabilidade
+de vitória**.
+:::
+
+## Divisão treino/teste: qual é a certa aqui?
+
+❌ **Split aleatório** (embaralhar os jogos): errado! O modelo treinaria
+com jogos de novembro para prever jogos de março — **vazamento
+temporal**.
+
+✅ **Split temporal**: treinamos com o passado, testamos no "futuro" —
+exatamente como o modelo seria usado na vida real (prever a próxima
+rodada).
+
+```{r}
+#| label: split
+set.seed(7321)
+split  <- initial_time_split(jogos, prop = 0.75)   # ← 75% mais antigos = treino
+treino <- training(split)                          # ← jan–jul
+teste  <- testing(split)                           # ← ago–set (o "futuro")
+
+c(treino = nrow(treino), teste = nrow(teste))
+```
+
+## E os jogos adiados (remarcados)?
+
+No Brasileirão real, jogos são adiados (copas, datas FIFA, logística).
+No nosso dataset eles aparecem de duas formas:
+
+1.  **Jogos remarcados já realizados**: entram pela **data em que de
+    fato foram jogados**, não pela rodada original. Como nosso split usa
+    o calendário real (`arrange(date)` + `initial_time_split`), eles
+    caem **automaticamente do lado certo** da divisão — sem ajuste
+    manual. ✅
+2.  **Jogos sem data definida** (3 jogos com `date` vazia e
+    `score == "x"`): ainda não aconteceram, então ficam **fora de treino
+    e teste** — aparecem só na previsão do futuro, no fim da aula.
+
+::: callout-tip
+Se o split fosse por **número da rodada** em vez da data, um jogo adiado
+da rodada 3 jogado em agosto entraria no treino "como se" tivesse
+acontecido em janeiro — vazamento sutil. Dividir pela data real evita
+isso.
+:::
+
+## Construindo as features (sem olhar o futuro!)
+
+::: callout-important
+## Data leakage
+
+Os ratings são calculados **somente com o treino**. Se usássemos o
+campeonato inteiro, o modelo "veria" resultados do futuro — e as
+métricas ficariam artificialmente otimistas.
+:::
+
+```{r}
+#| label: features
+# ratings recalculados SÓ com o treino (mesmo código de antes, sobre `treino`)
+stats_home <- treino |> group_by(time = home) |>
+  summarise(jogos = n(), pontos = sum(3 * (gols_home > gols_away) + (gols_home == gols_away)))
+stats_away <- treino |> group_by(time = away) |>
+  summarise(jogos = n(), pontos = sum(3 * (gols_away > gols_home) + (gols_away == gols_home)))
+
+ratings <- full_join(stats_home, stats_away, by = "time") |>
+  mutate(across(-time, ~ replace_na(.x, 0))) |>
+  transmute(time, aproveitamento = (pontos.x + pontos.y) / (3 * (jogos.x + jogos.y)))
+```
+
+## A função que monta o saldo de forças
+
+```{r}
+#| label: add-features
+add_features <- function(df, ratings) {
+  df |>
+    left_join(ratings, by = c("home" = "time")) |>      # ← aproveitamento do mandante
+    rename(ap_home = aproveitamento) |>
+    left_join(ratings, by = c("away" = "time")) |>      # ← aproveitamento do visitante
+    rename(ap_away = aproveitamento) |>
+    mutate(saldo_forca = ap_home - ap_away)             # ← a feature do modelo
+}
+
+treino_f <- add_features(treino, ratings)   # ← aplica no treino
+teste_f  <- add_features(teste, ratings)    # ← aplica no teste (ratings do treino!)
+
+treino_f |> select(home, away, saldo_forca, home_win) |> head(5)
+```
+
+# Bloco 2 — Log-Loss: como o modelo aprende
+
+## Por que não usar o MSE?
+
+Na regressão linear, minimizávamos o **erro quadrático médio (MSE)**.
+
+Em classificação probabilística, usamos a **Log-Loss** (entropia cruzada
+/ *deviance*):
+
+$$\text{LogLoss} = -\frac{1}{n} \sum_{i=1}^{n} \Big[ \; y_i \log(p_i) + (1 - y_i)\log(1 - p_i) \; \Big]$$
+
+| Símbolo | O que é |
+|------------------------------------|------------------------------------|
+| $n$ | Número de jogos |
+| $y_i$ | O que **aconteceu** no jogo $i$: 1 = mandante venceu, 0 = não |
+| $p_i$ | O que o modelo **previu**: probabilidade de vitória do mandante |
+| $\log$ | Logaritmo natural — transforma multiplicações de probabilidades em somas |
+
+## A mágica da fórmula: só um termo "sobrevive"
+
+$$\text{LogLoss} = -\frac{1}{n} \sum_{i=1}^{n} \Big[ \; y_i \log(p_i) + (1 - y_i)\log(1 - p_i) \; \Big]$$
+
+Para cada jogo, **apenas um dos dois termos conta**:
+
+- Se o mandante **venceu** ($y_i = 1$): o custo é $-\log(p_i)$ → o
+  modelo é punido se deu pouca chance à vitória
+- Se o mandante **não venceu** ($y_i = 0$): o custo é $-\log(1 - p_i)$ →
+  o modelo é punido se deu chance demais à vitória
+
+E quanto **mais confiante e errado** o palpite, maior a punição ↓
+
+## A punição pela arrogância
+
+```{r}
+#| label: logloss-curva
+#| echo: false
+#| fig-height: 4.5
+tibble(p = seq(0.01, 0.99, length.out = 300)) |>
+  mutate(custo = -log(1 - p)) |>          # ← custo quando o mandante NÃO venceu
+  ggplot(aes(x = p, y = custo)) +
+  geom_line(linewidth = 1.2) +
+  annotate("text", x = 0.82, y = 1.5,
+           label = "cravou 99% e errou\n→ punição explode") +
+  annotate("text", x = 0.35, y = 0.25,
+           label = "previu 51% e errou\n→ punição pequena") +
+  labs(x = "Probabilidade que o modelo deu à vitória (p)",
+       y = "Custo: -log(1 - p)") +
+  theme_minimal()
+```
+
+## O efeito no aprendizado
+
+Flamengo em casa, modelo crava **99%** de chance, e o time **perde**:
+
+$$-\log(1 - 0.99) = -\log(0.01) \approx 4.6$$
+
+Se tivesse cravado **99,9%**: $-\log(0.001) \approx 6.9$
+
+::: fragment
+A Log-Loss **obriga o modelo a calibrar probabilidades realistas** —
+quem dá palpite exagerado paga caro. É por isso que a Regressão
+Logística é conhecida por gerar probabilidades bem calibradas.
+:::
+
+## Ajustando a Regressão Logística
+
+```{r}
+#| label: fit
+lr_spec <- logistic_reg() |> set_engine("glm")     # ← Regressão Logística via glm
+
+lr_wf <- workflow() |>
+  add_formula(home_win ~ saldo_forca) |>           # ← vitória explicada pelo saldo de força
+  add_model(lr_spec)
+
+lr_fit <- fit(lr_wf, data = treino_f)              # ← o aprendizado acontece aqui
+
+tidy(lr_fit) |>                                    # ← os betas aprendidos
+  mutate(leitura = case_when(
+    term == "(Intercept)" ~ "← z quando o saldo é 0 (times iguais): é o mando de campo",
+    term == "saldo_forca" ~ "← peso do saldo: quanto z se move por ponto de saldo"
+  )) |>
+  knitr::kable(digits = 3,
+               col.names = c("Termo", "β estimado", "Erro-padrão",
+                             "Estatística z", "p-valor", "Leitura"))
+```
+
+Como ler cada coluna:
+
+- **β estimado** → o peso aprendido nos dados de **treino** (a "receita"
+  do modelo)
+- **Erro-padrão** → a margem de incerteza do β
+- **Estatística z** (−4.66 aqui) → β ÷ erro-padrão, uma razão
+  **sinal/ruído**: $|z| > 2$ já indica que a variável carrega sinal
+  real, longe do acaso
+- **p-valor** → probabilidade de ver um sinal desse tamanho se o β fosse
+  **zero** de verdade (aqui ≈ 0,000003 → o saldo de força importa mesmo)
+
+::: callout-note
+O β aparece **negativo** porque o `glm`, internamente, modela a
+probabilidade do **segundo** nível do fator ("nao"). O `parsnip` desfaz
+a inversão nas previsões — para nós, o evento é sempre o 1º nível
+("sim").
+:::
+
+## Os coeficientes na prática (1): a receita do modelo
+
+Desfazendo a inversão do `glm`, a receita aprendida no treino é:
+
+$$P(\text{vitória}) = \sigma\Big(\;\underbrace{0.05}_{\beta_0:\ \text{ponto de partida}} + \underbrace{4.37}_{\beta_1:\ \text{peso do saldo}} \times \text{saldo\_forca}\;\Big)$$
+
+Lendo em português claro:
+
+- **β₀ = 0.05** → se os times têm **força igual** (saldo = 0), o placar
+  interno é quase zero e $\sigma(0) \approx 50\%$: o mando de campo,
+  sozinho, vale pouco mais que uma moeda ao ar
+- **β₁ = 4.37** → cada **ponto de saldo de força** empurra o placar $z$
+  4.37 unidades para cima (mais chance de vitória)
+
+## Os coeficientes na prática (2): calculando na mão
+
+Exemplo real do nosso campeonato — **Flamengo (ap = 0.685) recebe a
+Chapecoense (ap = 0.167)**:
+
+| Passo | Conta | Resultado |
+|------------------------|------------------------|------------------------|
+| 1️⃣ Saldo de força | $0.685 - 0.167$ | $0.518$ |
+| 2️⃣ Placar interno | $z = 0.05 + 4.37 \times 0.518$ | $z \approx 2.3$ |
+| 3️⃣ Sigmoide | $\sigma(2.3) = \frac{1}{1 + e^{-2.3}}$ | $\approx 0.91$ → **91% de chance** |
+
+E se fossem **dois times iguais**? saldo = 0 → $z = 0.05$ →
+$\sigma \approx 51\%$: só o mando de campo.
+
+É exatamente assim que o modelo transforma "quem está melhor no
+campeonato" em probabilidade.
+
+## Previsões e Log-Loss no teste
+
+```{r}
+#| label: predicoes
+teste_pred <- predict(lr_fit, new_data = teste_f, type = "prob") |>   # ← probabilidades
+  bind_cols(predict(lr_fit, new_data = teste_f, type = "class")) |>   # ← decisão (corte 0.5)
+  bind_cols(teste_f)
+
+teste_pred |>
+  select(date, home, away, home_win, .pred_sim, .pred_class) |>
+  head(8)
+```
+
+```{r}
+#| label: logloss
+mn_log_loss(teste_pred, truth = home_win, .pred_sim)   # ← Log-Loss média no teste
+```
+
+A *deviance* que o `glm` reporta é simplesmente a Log-Loss $\times 2$.
+
+## A sigmoide separando os jogos do teste
+
+Cada ponto é um **jogo real do teste**, posicionado no placar interno
+$z$ que o modelo calculou para ele. No próximo slide, o gráfico
+completo.
+
+Leitura: pontos **vermelhos à direita** e **azuis à esquerda** = o
+modelo separou bem. Um ponto vermelho na **extrema esquerda** é onde a
+Log-Loss cobra caro: o modelo deu chance baixíssima à vitória... e ela
+aconteceu.
+
+## A separação, na tela
+
+```{r}
+#| label: sigmoide-separacao
+#| echo: false
+#| fig-height: 5.5
+teste_sep <- teste_f |>
+  mutate(
+    z = as.vector(predict(lr_fit, new_data = teste_f, type = "raw")),  # ← placar z de cada jogo
+    y = as.numeric(home_win == "sim")                                   # ← 1 = venceu, 0 = não venceu
+  )
+
+ggplot(teste_sep, aes(x = -z, y = y, color = home_win)) +   # ← -z desfaz a inversão do glm
+  stat_function(fun = sigmoide, linewidth = 1.2, color = "black") +
+  geom_jitter(height = 0.06, size = 2, alpha = 0.7) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  scale_y_continuous(breaks = c(0, 0.5, 1)) +
+  labs(x = "Placar interno z (saída da combinação linear)",
+       y = "P(vitória do mandante)", color = "Resultado real") +
+  theme_minimal()
+```
+
+# Bloco 3 — Matriz de Confusão e a Armadilha da Acurácia
+
+## A armadilha da acurácia
+
+```{r}
+#| label: armadilha
+# "Modelo cego": chuta SEMPRE que o mandante NÃO vence
+teste_pred |>
+  mutate(sempre_nao = factor("nao", levels = c("sim", "nao"))) |>
+  accuracy(truth = home_win, estimate = sempre_nao)     # ← acurácia do chute fixo
+
+accuracy(teste_pred, truth = home_win, estimate = .pred_class)  # ← acurácia do nosso modelo
+```
+
+Um chute fixo em "não vence" acerta **mais da metade** dos jogos sem
+entender nada de futebol. Em classes assimétricas, **a acurácia isolada
+engana**.
+
+## Os quatro cenários
+
+|   | **Real: venceu ✅** | **Real: não venceu ❌** |
+|--------------------|--------------------------|--------------------------|
+| **Previu: vence** | ✅ **TP** — acertou o palpite | ⚠️ **FP** — alarme falso |
+| **Previu: não vence** | ⚠️ **FN** — deixou passar | ✅ **TN** — acertou o palpite |
+
+Como ler a matriz:
+
+- **Precisão** → olha a **linha** de cima → → → ("dos meus palpites de
+  vitória, quantos certos?")
+- **Recall** → olha a **coluna** da esquerda ↓ ↓ ↓ ("das vitórias reais,
+  quantas capturei?")
+
+## A matriz com os nossos dados
+
+```{r}
+#| label: matriz
+cm <- conf_mat(teste_pred, truth = home_win, estimate = .pred_class)
+cm
+```
+
+## A matriz em imagem
+
+```{r}
+#| label: matriz-plot
+#| echo: false
+#| fig-height: 5
+autoplot(cm, type = "heatmap") +
+  labs(title = "Matriz de Confusão (dados de teste)")
+```
+
+# Bloco 4 — Métricas do Analista
+
+## As fórmulas, símbolo por símbolo
+
+| Métrica | Fórmula | Pergunta de negócio | Onde olhar na matriz |
+|------------------|------------------|------------------|------------------|
+| **Precisão** | $\frac{TP}{TP + FP}$ | Dos palpites de vitória, quantos se confirmaram? | Linha → |
+| **Recall** | $\frac{TP}{TP + FN}$ | Das vitórias reais, quantas capturamos? | Coluna ↓ |
+| **F1-Score** | $2 \cdot \frac{P \cdot R}{P + R}$ | Equilíbrio entre as duas (média harmônica) | Diagonal |
+| **Kappa** | $\frac{p_o - p_e}{1 - p_e}$ | Quanto melhor que um chute ponderado pelo acaso? | Toda ela |
+
+Onde $p_o$ = concordância observada (acurácia) e $p_e$ = concordância
+esperada **pelo acaso**, dadas as proporções das classes.
+
+## Quando cada uma importa
+
+- **Precisão** → apostador/investidor: cada **falso positivo** é
+  dinheiro perdido num palpite errado. Alarme falso custa caro.
+- **Recall** → fraude/saúde: cada **falso negativo** é um caso real que
+  passou despercebido. Deixar passar é inaceitável.
+- **F1** → quando as duas frentes importam; penaliza modelos que
+  sacrificam uma pela outra.
+- **Kappa** → responde: "meu modelo é melhor que um chute que respeita
+  as proporções do campeonato?" $\kappa \approx 0$ = não.
+
+## Exemplo visual: 10 palpites
+
+Antes dos dados reais, vamos ver as métricas **nascendo** num campeonato
+de brinquedo com 10 jogos:
+
+```{r}
+#| label: exemplo-metricas
+#| echo: false
+#| fig-height: 4.2
+ex <- tibble(
+  jogo    = paste0("J", 1:10),
+  real    = c(rep("venceu", 4), rep("não venceu", 3), rep("venceu", 3)),
+  palpite = c(rep("vence", 5), rep("não vence", 5))
+) |>
+  mutate(categoria = case_when(                          # ← classifica cada palpite
+    real == "venceu" & palpite == "vence"     ~ "TP",
+    real != "venceu" & palpite == "vence"     ~ "FP",
+    real == "venceu" & palpite != "vence"     ~ "FN",
+    TRUE                                      ~ "TN"
+  ))
+
+ggplot(ex, aes(x = jogo, y = 1)) +
+  geom_tile(aes(fill = categoria), color = "white", linewidth = 2,
+            width = 0.95, height = 0.55) +
+  geom_text(aes(label = categoria), fontface = "bold", size = 6) +
+  annotate("segment", x = 0.6, xend = 5.4, y = 1.55, yend = 1.55,
+           arrow = arrow(ends = "both", length = unit(0.15, "cm"))) +
+  annotate("text", x = 3, y = 1.8,
+           label = "palpites 'vence' (J1–J5): 4 certos em 5 → Precisão = 4/5 = 80%") +
+  annotate("segment", x = 0.6, xend = 4.4, y = 0.45, yend = 0.45,
+           arrow = arrow(ends = "both", length = unit(0.15, "cm"))) +
+  annotate("segment", x = 7.6, xend = 10.4, y = 0.45, yend = 0.45,
+           arrow = arrow(ends = "both", length = unit(0.15, "cm"))) +
+  annotate("text", x = 5.5, y = 0.15,
+           label = "vitórias reais (J1–J4 e J8–J10): capturou 4 de 7 → Recall = 4/7 ≈ 57%") +
+  coord_cartesian(ylim = c(0, 2)) +
+  labs(x = NULL, y = NULL, fill = "Categoria") +
+  theme_void() +
+  theme(legend.position = "right")
+```
+
+E as outras duas saem da mesma contagem: **Acurácia** = (4 TP + 2 TN)/10
+= 60% · **F1** = média harmônica de 80% e 57% ≈ 67%.
+
+## Calculando tudo de uma vez
+
+```{r}
+#| label: metricas
+class_metrics <- metric_set(accuracy, precision, recall, f_meas, kap)  # ← pacote de métricas
+
+class_metrics(teste_pred, truth = home_win, estimate = .pred_class)
+```
+
+::: fragment
+Repare: a acurácia ficou **abaixo do chute fixo** e o **Kappa perto de
+zero** entrega o jogo — nosso baseline de uma variável só é fraco. As
+métricas certas não deixam a acurácia mentir sozinha.
+:::
+
+# Bloco 5 — Cutoff, Curva ROC e Fechamento
+
+## O limiar de decisão (cutoff)
+
+Por padrão: $p \geq 0.50$ → "vence".
+
+Subindo o corte para **0.65**, só cravamos vitória com mais confiança:
+
+- modelo fica **conservador** → menos palpites de vitória
+- **precisão ↑** (os poucos palpites são mais certeiros)
+- **recall ↓** (deixamos escapar mais vitórias reais)
+
+```{r}
+#| label: cutoff
+comparar_cutoffs <- function(limiar) {
+  teste_pred |>
+    mutate(pred = factor(if_else(.pred_sim >= limiar, "sim", "nao"),  # ← aplica o corte
+                         levels = c("sim", "nao"))) |>
+    metric_set(accuracy, precision, recall, f_meas)(truth = home_win, estimate = pred) |>
+    mutate(cutoff = limiar)
+}
+
+bind_rows(comparar_cutoffs(0.5), comparar_cutoffs(0.65)) |>   # ← compara os dois limiares
+  pivot_wider(names_from = cutoff, values_from = .estimate, names_prefix = "cut_")
+```
+
+## Curva ROC e AUROC
+
+Em vez de escolher **um** corte, a **Curva ROC** testa **todos os cortes
+ao mesmo tempo**:
+
+- Eixo y: taxa de verdadeiros positivos (recall) ↑
+- Eixo x: taxa de falsos positivos →
+- **AUROC** (área sob a curva): 0.5 = chute aleatório · 1.0 = separação
+  perfeita
+
+```{r}
+#| label: roc-auc
+roc_auc(teste_pred, truth = home_win, .pred_sim)   # ← a área sob a curva do próximo slide
+```
+
+## A curva ROC desenhada
+
+```{r}
+#| label: roc
+#| echo: false
+#| fig-height: 5.5
+roc_curve(teste_pred, truth = home_win, .pred_sim) |>
+  autoplot()
+```
+
+## Fechamento do ciclo
+
+Nosso modelo de hoje é o **baseline (vanilla)**: 1 variável, algoritmo
+linear.
+
+O AUROC modesto e o Kappa baixo **estabelecem a régua** — é para isso
+que serve um baseline.
+
+Próximos passos: mais features (engenharia de atributos) e algoritmos
+não lineares (Árvores, Random Forests).
+
+Mas antes... **como escolher entre modelos sem contaminar o teste?** ↓
+
+# Bloco 6 — Validação Cruzada e Regularização
+
+## O problema com um único split
+
+Nosso teste tem só 64 jogos → as métricas oscilam bastante por acaso.
+
+Solução: **validação cruzada**. Mas com dados temporais, o CV clássico
+(k-fold aleatório) vaza informação do futuro...
+
+✅ **CV temporal** (janela deslizante): cada fatia treina no passado e
+valida no futuro imediato:
+
+```         
+Slice1: [======== treino ========|== validação ==]
+Slice2:          [======== treino ========|== validação ==]
+Slice3:                   [======== treino ========|== validação ==]
+Slice4:                            [======== treino ========|== validação ==]
+                                   tempo → → →
+```
+
+## Mais features para o Lasso fazer sentido
+
+Regularizar **uma** variável não faz sentido. Vamos dar ao modelo três
+saldos — e deixar o Lasso decidir quais valem a pena:
+
+```{r}
+#| label: features2
+stats_home <- treino |> group_by(time = home) |>
+  summarise(jogos = n(), pontos = sum(3 * (gols_home > gols_away) + (gols_home == gols_away)),
+            gm = sum(gols_home), gs = sum(gols_away))          # ← gols marcados/sofridos
+stats_away <- treino |> group_by(time = away) |>
+  summarise(jogos = n(), pontos = sum(3 * (gols_away > gols_home) + (gols_away == gols_home)),
+            gm = sum(gols_away), gs = sum(gols_home))
+
+ratings2 <- full_join(stats_home, stats_away, by = "time") |>
+  mutate(across(-time, ~ replace_na(.x, 0))) |>
+  transmute(time,
+            aproveitamento = (pontos.x + pontos.y) / (3 * (jogos.x + jogos.y)),
+            gm_medio = (gm.x + gm.y) / (jogos.x + jogos.y),
+            gs_medio = (gs.x + gs.y) / (jogos.x + jogos.y))
+```
+
+## Três features de saldo
+
+```{r}
+#| label: add-features2
+add_features2 <- function(df, ratings) {
+  df |>
+    left_join(ratings, by = c("home" = "time")) |>
+    rename_with(~ paste0(.x, "_home"), c(aproveitamento, gm_medio, gs_medio)) |>
+    left_join(ratings, by = c("away" = "time")) |>
+    rename_with(~ paste0(.x, "_away"), c(aproveitamento, gm_medio, gs_medio)) |>
+    mutate(
+      saldo_forca  = aproveitamento_home - aproveitamento_away,  # ← quem está melhor
+      saldo_ataque = gm_medio_home - gm_medio_away,              # ← quem marca mais
+      saldo_defesa = gs_medio_away - gs_medio_home               # ← quem sofre menos
+    )
+}
+
+treino_f2 <- add_features2(treino, ratings2)
+teste_f2  <- add_features2(teste, ratings2)
+```
+
+## Regularização Lasso — a ideia
+
+A Log-Loss sozinha pode **superajustar** (decorar o treino). O **Lasso
+(L1)** adiciona um pedágio por coeficiente grande:
+
+$$\min_{\beta} \;\; \underbrace{\text{LogLoss}(\beta)}_{\text{acertar o treino}} + \;\; \lambda \underbrace{\sum_j |\beta_j|}_{\text{pedágio por complexidade}}$$
+
+| Símbolo | O que é |
+|------------------------------------|------------------------------------|
+| $\lambda$ | **Intensidade da penalização** — nosso hiperparâmetro a otimizar |
+| $\sum_j \vert\beta_j\vert$ | Soma dos tamanhos dos pesos (norma L1) |
+
+A norma L1 tem uma propriedade famosa: ela **zera coeficientes** de
+variáveis que não carregam sua parte do pedágio → seleção automática de
+features.
+
+## Montando o CV temporal e os dois competidores
+
+```{r}
+#| label: cv
+set.seed(4815)
+cv_folds <- sliding_window(treino_f2,          # ← janelas deslizantes no tempo
+                           lookback = 90,      # ← treina com 91 jogos
+                           assess_stop = 25,   # ← valida nos 25 seguintes
+                           step = 20)          # ← avança 20 jogos por fatia
+
+spec_vanilla <- logistic_reg() |>
+  set_engine("glm")                                        # ← sem penalização
+
+spec_lasso <- logistic_reg(penalty = tune(), mixture = 1) |>
+  set_engine("glmnet")                                     # ← λ será otimizado; mixture=1 → Lasso
+
+formula_modelo <- home_win ~ saldo_forca + saldo_ataque + saldo_defesa
+wf_vanilla <- workflow() |> add_model(spec_vanilla) |> add_formula(formula_modelo)
+wf_lasso   <- workflow() |> add_model(spec_lasso)   |> add_formula(formula_modelo)
+```
+
+## Rodando a validação cruzada
+
+```{r}
+#| label: tune
+mset <- metric_set(roc_auc, mn_log_loss, accuracy)     # ← métricas avaliadas em cada fatia
+
+res_vanilla <- fit_resamples(wf_vanilla, resamples = cv_folds, metrics = mset)
+
+grid_lasso <- grid_regular(penalty(range = c(-4, 0)), levels = 10)  # ← 10 valores de λ
+
+res_lasso <- tune_grid(wf_lasso, resamples = cv_folds,
+                       grid = grid_lasso, metrics = mset)           # ← CV para cada λ
+
+collect_metrics(res_vanilla)
+```
+
+## Otimização do λ: o perfil de regularização
+
+```{r}
+#| label: autoplot-lasso
+#| echo: false
+#| fig-height: 4.5
+autoplot(res_lasso, metric = "roc_auc")
+```
+
+Leitura: λ pequeno → modelo livre; λ grande demais → o pedágio **mata
+todos os coeficientes** e o AUROC desaba para 0.5 (chute aleatório). O
+melhor λ fica no platô intermediário.
+
+## Comparando os modelos (média das fatias de CV)
+
+```{r}
+#| label: comparacao
+collect_metrics(res_lasso) |>
+  filter(.metric == "roc_auc") |>
+  arrange(desc(mean)) |>
+  slice(1)                                  # ← melhor λ do Lasso
+
+collect_metrics(res_vanilla) |>
+  filter(.metric == "roc_auc")              # ← vanilla, mesmas fatias
+```
+
+O Lasso vence por uma margem pequena, mas **consistente** — e com um
+modelo mais simples.
+
+## Modelo final: travar o λ e re-treinar
+
+```{r}
+#| label: final
+best_lambda <- select_best(res_lasso, metric = "roc_auc")       # ← λ vencedor do CV
+
+fit_lasso <- finalize_workflow(wf_lasso, best_lambda) |>        # ← trava o λ no workflow
+  fit(data = treino_f2)                                          # ← re-treina com TODO o treino
+
+tidy(fit_lasso)                                                  # ← quem sobreviveu ao Lasso?
+```
+
+Repare: o Lasso **zerou** `saldo_ataque` — a variável não pagava seu
+pedágio.
+
+## Veredito no teste (uma única vez!)
+
+```{r}
+#| label: veredito
+teste_pred_lasso <- predict(fit_lasso, teste_f2, type = "prob") |>
+  bind_cols(teste_f2)
+
+roc_auc(teste_pred_lasso, truth = home_win, .pred_sim)
+mn_log_loss(teste_pred_lasso, truth = home_win, .pred_sim)
+```
+
+O teste só é tocado **agora**, depois de todas as decisões tomadas via
+CV — senão ele vira parte do processo de desenvolvimento e perde o
+valor.
+
+## Bônus: prevendo o restante do campeonato
+
+```{r}
+#| label: futuro
+futuro <- brasileirao_2026 |>
+  filter(score == "x") |>                 # ← jogos que ainda não aconteceram
+  add_features2(ratings2)
+
+predict(fit_lasso, new_data = futuro, type = "prob") |>
+  bind_cols(futuro) |>
+  select(date, home, away, .pred_sim) |>
+  arrange(desc(.pred_sim)) |>
+  head(10)
+```
+
+::: callout-warning
+Ratings calculados só com o treino → times que melhoraram na segunda
+metade estão subavaliados. Atualizar ratings e re-treinar é parte do
+exercício!
+:::
+
+## Como o modelo prevê o fim do campeonato?
+
+Somando os pontos já conquistados com os pontos dos jogos futuros
+segundo a **decisão do modelo** ($p \geq 0.5$ → vitória do mandante;
+senão, vitória do visitante):
+
+```{r}
+#| label: tabela-final
+# pontos já conquistados nos jogos realizados
+pts_home <- jogos |>
+  mutate(p = case_when(gols_home > gols_away ~ 3, gols_home == gols_away ~ 1, TRUE ~ 0)) |>
+  count(time = home, wt = p, name = "pontos")            # ← pontos como mandante
+pts_away <- jogos |>
+  mutate(p = case_when(gols_away > gols_home ~ 3, gols_away == gols_home ~ 1, TRUE ~ 0)) |>
+  count(time = away, wt = p, name = "pontos")            # ← pontos como visitante
+
+tabela_atual <- full_join(pts_home, pts_away, by = "time") |>
+  transmute(time, pontos_atuais = pontos.x + pontos.y)
+
+# decisão do modelo em cada jogo futuro
+fut_pred <- predict(fit_lasso, new_data = futuro, type = "prob") |>
+  bind_cols(futuro)
+
+prev_home <- fut_pred |> filter(.pred_sim >= 0.5) |>
+  count(time = home, wt = 3, name = "prev")              # ← 3 pts por vitória prevista em casa
+prev_away <- fut_pred |> filter(.pred_sim < 0.5) |>
+  count(time = away, wt = 3, name = "prev")              # ← 3 pts por vitória prevista fora
+
+tabela_final <- tabela_atual |>
+  full_join(prev_home, by = "time") |>
+  full_join(prev_away, by = "time") |>
+  mutate(across(-time, ~ replace_na(.x, 0))) |>
+  transmute(time,
+            pontos_atuais,
+            pontos_previstos = prev.x + prev.y,
+            total_previsto = pontos_atuais + pontos_previstos) |>
+  arrange(desc(total_previsto))
+
+tabela_final
+```
+
+::: callout-warning
+## Limitações desta projeção
+
+Nosso modelo é **binário**: ele não prevê empates — cada jogo futuro
+vira 3 pontos para alguém, então os totais ficam inflados em relação à
+realidade. Some-se a isso os ratings congelados no treino. É uma
+**projeção didática**, não um palpite para apostas!
+:::
+
+## Resumo da aula
+
+1.  **Sigmoide** espreme o placar linear $z$ para $[0,1]$ →
+    probabilidade
+2.  **Log-Loss** pune arrogância → probabilidades calibradas
+3.  **Acurácia mente** em classes assimétricas → matriz de confusão
+4.  **Precisão / Recall / F1 / Kappa** → cada uma responde a um custo de
+    negócio
+5.  **Cutoff e ROC-AUC** → o ponto de corte é uma decisão nossa, não do
+    modelo
+6.  **CV temporal + Lasso** → comparar modelos sem contaminar o teste, e
+    deixar a regularização podar o que não agrega
